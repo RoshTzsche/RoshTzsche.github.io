@@ -74,12 +74,14 @@ const links = [
     background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(8px);
   }
+  /* One row on desktop: brand · links (centred in the free space) · controls.
+     Below 1280px the links move into the menu, so nothing ever wraps. */
   .nav-inner {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
-    gap: 14px 28px;
+    gap: 14px 24px;
     padding-block: 14px;
   }
   .brand {
@@ -92,10 +94,15 @@ const links = [
     font-size: 21px;
     font-weight: 600;
   }
+  .brand { flex-shrink: 0; white-space: nowrap; }
   .nav-links {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 22px;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+    justify-content: center;
+    white-space: nowrap;
+    gap: 6px clamp(12px, 1.3vw, 22px);
     font-family: var(--font-mono);
     font-size: 14px;
   }
@@ -156,8 +163,8 @@ const links = [
   .menu-btn[aria-expanded='true'] .l3 { transform: translateY(-5px) rotate(-45deg); }
 
   /* ---------- phones & small tablets ---------- */
-  @media (max-width: 960px) {
-    .nav-inner { gap: 10px; }
+  @media (max-width: 1280px) {
+    .nav-inner { gap: 10px; flex-wrap: wrap; }
     .brand { order: 1; flex: 1; }
     .menu-btn { display: inline-flex; order: 3; }
     .nav-controls { order: 2; gap: 8px; }
