@@ -1,73 +1,95 @@
 ---
-title: "Being visible to search engines and AI agents"
+title: "AI visibility, part 1: how crawlers and agents read the web"
 date: 2026-11-21
 shelf: science
-tags: [ai, seo, crawlers, llms.txt]
-summary: "What actually works so Google, ChatGPT, Claude and Perplexity find and cite a personal website — and what is pure myth. Work in progress."
+tags: [ai, seo, crawlers, agents, llms.txt]
+summary: "Before optimising anything: how a page ends up in a ChatGPT, Claude or Perplexity answer, how autonomous browsing agents 'see' it, and how we'll measure whether changes work. Series in progress."
 translatedFrom: es
 reviewed: false
 ---
 
-*Living note: I keep extending it as I research.* The goal: when someone searches "Rosh Guadiana Páez" on Google, ChatGPT, Claude or Perplexity, the answer should come from here.
+*Series in progress.* I want the answer to "who is Rosh Guadiana Páez?" — on Google or from an AI — to come from this site. Before changing anything, it's worth understanding how these systems work, and deciding **how we'll check** that a change helps, instead of trusting SEO recipes.
 
-## 1. What matters most: the HTML must carry the content
+## 1. Three ways an AI "knows" something about a website
 
-The most important AI crawlers **do not execute JavaScript**. The Vercel/MERJ study found no JS rendering from OpenAI (OAI-SearchBot, ChatGPT-User, GPTBot), Anthropic (ClaudeBot), Meta, ByteDance or Perplexity. The exceptions are Gemini (which uses Googlebot's infrastructure) and Applebot. A Search Engine Land experiment with JS-injected links saw GPTBot, ClaudeBot, Bingbot and PerplexityBot discover **none** of those pages.
+**a) Training memory.** The model read a copy of the web before its cutoff. Bots such as GPTBot, ClaudeBot or CCBot collect that material. What it learned this way carries no citations and may be outdated.
 
-**What we did:**
-- Astro generates static HTML: all the text is in the HTML, with no dependence on JS.
-- The root `/` used to be a JavaScript redirect (to an AI bot, an empty page). **It now serves the full English home page as HTML**, and only Spanish-language browsers are redirected to `/es/`.
-- The animations (attractor, EEG) are decoration; no important information lives only in JS.
+**b) Search at answer time (RAG).** When the question needs current facts, the model does *retrieval-augmented generation*: it rewrites the question into several searches, queries an index, picks some pages, reads them and answers citing them. The index **isn't always its own**: ChatGPT relies heavily on Bing's (a Seer Interactive analysis found 87% of its citations matched Bing's top results), Gemini uses Google's and Perplexity runs its own crawler. A RESONEO study of 1,200 ChatGPT answers found three layers: an index for discovering pages, a cache with full copies of pages already read, and a few pages opened live.
 
-## 2. robots.txt: let AI bots in, explicitly
+**c) On-demand visits.** If someone pastes a link or asks "check this page", a fetcher (ChatGPT-User, Claude-User, Perplexity-User) downloads it right then.
 
-There are three kinds of AI bots, and it helps to tell them apart:
+In a), b) and c), **the bot downloads the HTML and does not run JavaScript**. Vercel analysed hundreds of millions of visits and found no JS rendering from the OpenAI, Anthropic, Meta, ByteDance or Perplexity bots; Gemini (through Googlebot) and Applebot do render it. In other words: for most of them, whatever isn't in the initial HTML doesn't exist.
 
-| Type | Examples | Purpose |
-|---|---|---|
-| Search / citation | OAI-SearchBot, Claude-SearchBot, PerplexityBot | Index pages to cite them in answers |
-| User request | ChatGPT-User, Claude-User, Perplexity-User | Visit a page because someone asked |
-| Training | GPTBot, ClaudeBot, Google-Extended, CCBot | Data for training models |
+## 2. Agents that browse like people
 
-For a personal site that wants to be known, **being the cited source in an AI answer is the new first page**. That's why all three types are allowed here (training included: so future models "know" who I am). `Google-Extended` is not a separate crawler: it only controls use for Gemini and does not affect Google ranking. `anthropic-ai` and `Claude-Web` are deprecated.
+Separate from crawlers are **browser agents**: systems that open a real browser, click and type on the user's behalf. These do run JavaScript, because they use a full browser. To understand the page they use three representations, increasingly combined:
 
-**What we did:** `/robots.txt` lists each bot with `Allow: /` and points to the sitemap and to `llms.txt`.
+- **Screenshots** read by a vision model. The most expensive and ambiguous option: a button is just a rectangle of pixels.
+- The raw **HTML / DOM**.
+- The **accessibility tree**: the summary the browser builds for screen readers, with each element's *role*, *name* and *state*. Tools such as Playwright MCP or browser-use rely on it as their main view because it is cheap and unambiguous.
 
-## 3. Structured data (schema.org)
+Practical consequence: **accessibility is no longer just for people**. Real buttons (`<button>`), real links (`<a href>`), headings in order and alt text are what an agent "reads". For context: in June 2026 Cloudflare measured automated traffic overtaking human traffic on HTML pages, roughly 57% against 43%.
 
-- `ProfilePage` with `mainEntity: Person` on the home page. Google defines it for pages focused on a single person affiliated with the site, such as an "About me".
-- `Person` with `name`, `alternateName` (with and without the accent, plus the username RoshTzsche), `affiliation` (UDLAP), `identifier` (ORCID) and **`sameAs`** pointing to GitHub, LinkedIn, ORCID, Lichess and Chess.com. `sameAs` is what lets search engines and models merge all my profiles into a single entity.
-- `BlogPosting` on every post, with the author linked to the same `Person`.
+## 3. The full chain (and where it can break)
 
-## 4. llms.txt: cheap, but don't expect miracles
+```
+discover URL → permission (robots.txt) → download HTML → index → retrieve for a question → read → cite
+```
 
-`/llms.txt` is a proposal by Jeremy Howard (September 2024): a Markdown index of "what to read first". The 2026 evidence is not encouraging:
-- Ahrefs analysed 137K sites: **97% of llms.txt files received no requests at all** in May 2026. The main readers are **coding agents** (Claude Code was among the top) and training crawlers, not the search bots that produce citations.
-- Google said in May 2026 that it isn't needed to appear in its AI features.
-- A 10-site study (Search Engine Land): 2 saw their AI traffic grow, 8 saw no change.
+Each arrow is a different failure point, and each is checked a different way. That's why the plan below measures **each link separately**.
 
-**What we did (it costs almost nothing):** `/llms.txt` (index), `/llms-full.txt` (the whole profile, projects and posts in one file) and every post as plain Markdown (`/en/writing/<slug>.md`), linked with `<link rel="alternate" type="text/markdown">`.
+## 4. How we'll check what works
 
-## 5. Classic SEO still rules
+| # | What we measure | How | Status |
+|---|---|---|---|
+| E1 | Does a bot without JavaScript see the content? | Download the page without running JS and look for name, bio, projects and awards | ✅ Done (below) |
+| E2 | Is the structured data valid? | [Rich Results Test](https://search.google.com/test/rich-results) and [validator.schema.org](https://validator.schema.org) should detect `ProfilePage` and `Person` | Pending |
+| E3 | Do Google and Bing index it? | Search Console (URL inspection) and Bing Webmaster Tools; search `site:roshtzsche.github.io` | Pending |
+| E4 | Do AIs find and cite me? | Every two weeks, ask ChatGPT, Claude, Perplexity and Gemini the same question and record the answer and sources | Baseline pending |
+| E5 | Which bots visit and what do they read (does anyone read `llms.txt`?) | Server logs. GitHub Pages doesn't provide them; with a custom domain behind Cloudflare the AI bots become visible | Needs domain |
 
-- A `<title>` with my full name and context, `meta description`, `canonical`.
-- `hreflang` es/en/x-default and a sitemap with per-language alternates.
-- Real, specific content: projects with names, awards, dates, institutions. Models cite concrete facts.
+The rule: **one change at a time, measured before and after**. With a single site there's no control group, so the honest approach is to compare against the baseline and date every observation.
 
-## 6. What's left to do (what moves the needle most)
+### E1 — result (21 Nov 2026)
 
-1. **Google Search Console** (search.google.com/search-console): add the property `https://roshtzsche.github.io/`, verify it with the `google-site-verification` tag and submit `sitemap.xml`. Do the same in **Bing Webmaster Tools**, because ChatGPT search uses Bing's index.
-2. **Links to my site from all my profiles:** in the *Website* field on GitHub, LinkedIn, ORCID, Instagram, Lichess and Chess.com, and in my GitHub README and my CV. These are the strongest signals that this site is me.
-3. **A custom domain** (`roshguadiana.dev`): it matches my name exactly.
-4. **Write.** Every post with my name, in two languages, is another way in.
-5. **Patience:** indexing and ranking take weeks. LinkedIn or GitHub may rank higher at first; with the cross-links, my site becomes the reference.
+I downloaded the root the way a crawler would, without running JavaScript. The title ("Rosh Guadiana Páez — Biomedical Engineering · UDLAP"), the H1 with my name, the bio, all 10 projects, the awards and the competitions are there. **Before this change the root was a JavaScript redirect: to these bots, a nearly empty page.** The reader I used converts the page to text and drops `<script>` tags, so it can't check the JSON-LD: E2 covers that.
+
+To repeat it from a terminal, with a bot's user agent:
+
+```bash
+curl -s -A "GPTBot" https://roshtzsche.github.io/ | grep -o "Gota Poblana" | head -1
+curl -s -A "ClaudeBot" https://roshtzsche.github.io/ | grep -o '"@type":"ProfilePage"'
+```
+
+### E4 — baseline protocol
+
+A fixed question, in a fresh session with web search on: *"Who is Rosh Guadiana Páez?"*. For each AI, record the date, whether it identifies me correctly, which sources it cites and whether this site appears. Repeat every two weeks.
+
+## 5. What's already in place (hypotheses to verify)
+
+What's in place is based on the above; each point will be confirmed or discarded by E1–E5:
+
+- **Complete static HTML** (Astro), including the root. Confirmed by E1.
+- **A `robots.txt` that explicitly allows** search, user and training bots: for a personal site, being the cited source is the new first page.
+- **Structured data:** `ProfilePage` + `Person`, with `sameAs` pointing to GitHub, LinkedIn, ORCID, Lichess and Chess.com, so search engines merge my profiles into a single entity. Every post carries `BlogPosting`. Pending E2.
+- **`llms.txt`, `llms-full.txt` and every post as Markdown.** Low expectations: Ahrefs found that 97% of `llms.txt` files received not a single request in May 2026, and that the few readers are mostly coding agents. It costs almost nothing; E5 will tell whether anyone uses it here.
+- **A sitemap with `hreflang`**, and titles and descriptions with my full name.
+
+## Coming next
+
+- **Part 2:** results of E2 and E3 (validation and indexing).
+- **Part 3:** E4 baseline (what AIs answer today).
+- **Part 4:** custom domain and bot logs (E5).
 
 ## Sources
 
 - [Vercel — *The rise of the AI crawler*](https://vercel.com/blog/the-rise-of-the-ai-crawler)
 - [Search Engine Land — JavaScript links invisible to AI search](https://searchengineland.com/javascript-links-pages-invisible-ai-search-485228)
-- [Ahrefs — *We analyzed 137K sites: 97% of llms.txt files never get read*](https://ahrefs.com/blog/llmstxt-study/)
-- [Search Engine Journal — summary of the Ahrefs study](https://searchenginejournal.com/97-of-llms-txt-files-got-no-requests-ahrefs-data-shows/579478)
+- [Search Engine Land — inside ChatGPT's retrieval stack (RESONEO)](https://searchengineland.com/chatgpt-retrieval-stack-index-cache-pages-485036)
+- [Surfer — how AI engines choose sources](https://surferseo.com/blog/how-do-ai-engines-choose-sources/)
+- [Ahrefs — RAG explained](https://ahrefs.com/blog/retrieval-augmented-generation/)
+- [web.dev — *Build agent-friendly websites*](https://web.dev/articles/ai-agent-site-ux)
+- [Search Engine Journal — the accessibility tree is how AI agents read your site](https://www.searchenginejournal.com/the-accessibility-tree-is-how-ai-agents-read-your-site-its-breaking/578171/)
+- [Ahrefs — 97% of llms.txt files never get read](https://ahrefs.com/blog/llmstxt-study/)
 - [Flavio Copes — *robots.txt in the age of AI crawlers*](https://flaviocopes.com/robots-txt-ai-crawlers/)
-- [Search Engine Journal — AI user-agent list](https://www.searchenginejournal.com/ai-crawler-user-agents-list/558130/)
 - [Google — ProfilePage structured data](https://developers.google.com/search/docs/appearance/structured-data/profile-page)
