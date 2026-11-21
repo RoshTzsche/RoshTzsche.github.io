@@ -41,7 +41,7 @@ export const ui = {
       bio: 'Estudiante de Ingeniería Biomédica en el Programa de Honores de la UDLAP. Trabajo donde las matemáticas se cruzan con la fisiología: reconstrucción del espacio de estados en EEG, instrumentación biomédica y software de investigación. De Durango, estudiando en Puebla.',
       ctaProjects: 'ls ./proyectos',
       figCaption:
-        '↳ al fondo: embedding de retardos [ x(t), x(t−τ), x(t−2τ) ] de una sola señal caótica, el método detrás de',
+        '↳ al fondo: embedding de retardos $\\big[x(t),\\, x(t-\\tau),\\, x(t-2\\tau)\\big]$ de una sola señal caótica, el método detrás de',
       distinctions: 'Distinciones',
       eegCaption: 'señal sintética · ojos cerrados',
       eegBands: 'potencia relativa por banda · O1',
@@ -58,7 +58,7 @@ export const ui = {
       studying: [
         'Análisis real',
         'Topología general',
-        'Teoría de la medida · espacios Lᵖ',
+        'Teoría de la medida · espacios $L^p$',
         'Lógica formal',
         'Sistemas dinámicos no lineales',
       ],
@@ -147,7 +147,7 @@ export const ui = {
       bio: "Biomedical Engineering student in UDLAP's Honors Program, working where mathematics meets physiology: EEG state-space reconstruction, biomedical instrumentation and research software. From Durango, studying in Puebla.",
       ctaProjects: 'ls ./projects',
       figCaption:
-        '↳ behind this text: delay embedding [ x(t), x(t−τ), x(t−2τ) ] of a single chaotic signal, the method behind',
+        '↳ behind this text: delay embedding $\\big[x(t),\\, x(t-\\tau),\\, x(t-2\\tau)\\big]$ of a single chaotic signal, the method behind',
       distinctions: 'Distinctions',
       eegCaption: 'synthetic signal · eyes closed',
       eegBands: 'relative band power · O1',
@@ -164,7 +164,7 @@ export const ui = {
       studying: [
         'Real analysis',
         'General topology',
-        'Measure theory · Lᵖ spaces',
+        'Measure theory · $L^p$ spaces',
         'Formal logic',
         'Nonlinear dynamical systems',
       ],

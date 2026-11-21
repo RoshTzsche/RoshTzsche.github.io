@@ -261,3 +261,9 @@ kbd {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- KaTeX in both modes ---------- */
+.katex { color: inherit; font-size: 1.08em; }
+.mono .katex { font-size: 1.15em; }
+.katex-display > .katex { white-space: normal; }
+.prose .katex-display { color: var(--fg); }

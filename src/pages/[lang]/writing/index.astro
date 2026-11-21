@@ -2,6 +2,7 @@
 import Base from '../../../layouts/Base.astro';
 import { useT, getStaticLangPaths, otherLang, type Lang } from '../../../i18n/ui';
 import { postsIn, postUrl, formatDate, type Post } from '../../../lib/posts';
+import { tex } from '../../../lib/tex';
 
 export const getStaticPaths = getStaticLangPaths;
 const lang = Astro.params.lang as Lang;
@@ -34,9 +35,9 @@ const shelves: { id: string; title: string; items: Post[] }[] = [
               <a href={postUrl(p)}>
                 <span class="title">
                   {p.data.draft && <span class="draft mono">{t.writing.draft}</span>}
-                  {p.data.title}
+                  <Fragment set:html={tex(p.data.title)} />
                 </span>
-                <span class="summary">{p.data.summary}</span>
+                <span class="summary" set:html={tex(p.data.summary)} />
                 <span class="meta mono">{formatDate(p.data.date, lang)} · {p.data.tags.join(', ')}</span>
               </a>
             </li>

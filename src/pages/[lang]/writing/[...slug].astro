@@ -5,6 +5,7 @@ import Base from '../../../layouts/Base.astro';
 import PgnViewer from '../../../components/PgnViewer.astro';
 import { useT, otherLang, type Lang } from '../../../i18n/ui';
 import { allPosts, langOf, slugOf, formatDate, readingMinutes, type Post } from '../../../lib/posts';
+import { tex } from '../../../lib/tex';
 
 export async function getStaticPaths() {
   const posts = await allPosts();
@@ -29,8 +30,8 @@ const d = post.data;
     <a class="back mono" href={`/${lang}/writing/`}>{t.writing.back}</a>
     <header>
       <p class="kicker">{t.shelf[d.shelf]} · {formatDate(d.date, lang)} · {readingMinutes(post.body)} {t.writing.minRead}</p>
-      <h1>{d.title}</h1>
-      <p class="summary">{d.summary}</p>
+      <h1 set:html={tex(d.title)} />
+      <p class="summary" set:html={tex(d.summary)} />
       {d.translatedFrom && (
         <p class="translated mono">
           {t.writing.translatedNote} {d.reviewed ? t.writing.reviewedNote : t.writing.unreviewedNote}
