@@ -17,10 +17,6 @@ const NAMES = { es: 'Spanish (Mexico)', en: 'English' };
 const provider =
   process.env.TRANSLATE_PROVIDER ||
   (process.env.GROQ_API_KEY ? 'groq' : process.env.GEMINI_API_KEY ? 'gemini' : null);
-if (!provider) {
-  console.error('Set GROQ_API_KEY or GEMINI_API_KEY.');
-  process.exit(1);
-}
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
@@ -118,6 +114,10 @@ async function main() {
     }
   }
   if (!todo.length) { console.log('Nothing to translate.'); return; }
+  if (!provider) {
+    console.log(`::warning::${todo.length} post(s) need translation, but GROQ_API_KEY / GEMINI_API_KEY is not set. Skipping.`);
+    return;
+  }
   const created = [];
   for (const f of todo) created.push(await translateFile(f));
   if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `created=${created.join(' ')}\n`);
