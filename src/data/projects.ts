@@ -8,6 +8,9 @@ export type Project = {
   foot?: L;              // event / context line
   award?: L;             // shown highlighted
   links?: { label: L; href: string }[];
+  // Image: drop a file named <repo>.webp / .jpg / .png / .gif into public/projects/
+  // and it shows up automatically. Optional alt text:
+  imageAlt?: L;
 };
 
 const gh = (repo: string) => `https://github.com/RoshTzsche/${repo}`;
@@ -132,10 +135,10 @@ export const lab: Project[] = [
 ];
 
 export const distinctions = [
-  { tag: 'NASA SPACE APPS 2026', es: 'Mayor Innovación Tecnológica, Puebla', en: 'Greatest Technological Innovation, Puebla' },
-  { tag: 'HACKATÓN PUEBLA 2026', es: '2.º lugar — Gota Poblana', en: '2nd place — Gota Poblana' },
-  { tag: 'ENACTUS 2025', es: '2.º lugar nacional, IA para impacto social', en: '2nd place national, AI for social impact' },
-  { tag: 'UDLAP', es: 'Programa de Honores · Promedio 9.6 · Putnam 2026', en: 'Honors Program · GPA 9.6 · Putnam 2026' },
+  { href: '#p-mars_walker', tag: 'NASA SPACE APPS 2026', es: 'Mayor Innovación Tecnológica, Puebla', en: 'Greatest Technological Innovation, Puebla' },
+  { href: '#p-gota_poblana', tag: 'HACKATÓN PUEBLA 2026', es: '2.º lugar — Gota Poblana', en: '2nd place — Gota Poblana' },
+  { href: '#p-ojo_de_halcon', tag: 'ENACTUS 2025', es: '2.º lugar nacional, IA para impacto social', en: '2nd place national, AI for social impact' },
+  { href: '#math', tag: 'UDLAP', es: 'Programa de Honores · Promedio 9.6 · Putnam 2026', en: 'Honors Program · GPA 9.6 · Putnam 2026' },
 ];
 
 export const competitions = [

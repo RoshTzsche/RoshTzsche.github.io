@@ -1,34 +1,21 @@
 ---
-// Synthetic 6-channel EEG (eyes closed): alpha 10 Hz strongest over O1/O2,
+// Compact synthetic 6-channel EEG (eyes closed): alpha 10 Hz strongest over O1/O2,
 // beta 21 Hz, theta 5.5 Hz, AR(1) noise, and eye blinks on Fp1/Fp2.
 import { useT, type Lang } from '../i18n/ui';
 interface Props { lang: Lang }
 const t = useT(Astro.props.lang);
-const bands = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
 ---
-<section class="wrap eeg" aria-labelledby="eeg-h">
-  <div class="eeg-head">
-    <h2 id="eeg-h" class="mono"><span class="accent">~ ❯</span> stream --channels Fp1 Fp2 C3 C4 O1 O2 --fs 256</h2>
-    <span class="mono live"><span class="dot" aria-hidden="true"></span>{t.home.eegCaption}</span>
+<div class="eeg">
+  <div class="eeg-head mono">
+    <span><span class="accent">❯</span> eeg --fs 256</span>
+    <span class="live"><span class="dot" aria-hidden="true"></span>{t.home.eegCaption}</span>
   </div>
-  <div class="eeg-row">
-    <div class="eeg-traces">
-      <div class="labels mono" aria-hidden="true"><span>Fp1</span><span>Fp2</span><span>C3</span><span>C4</span><span>O1</span><span>O2</span></div>
-      <canvas class="eeg-canvas" role="img" aria-label="Six animated EEG channel traces"></canvas>
-    </div>
-    <div class="eeg-bands">
-      <p class="mono muted small">{t.home.eegBands}</p>
-      {bands.map((b) => (
-        <div class="band mono">
-          <span class="name">{b}</span>
-          <span class="bar"><span class:list={['fill', { alpha: b === 'alpha' }]} data-band={b}></span></span>
-          <span class="pct" data-pct={b}></span>
-        </div>
-      ))}
-      <p class="note">{t.home.eegNote} <a href="https://github.com/RoshTzsche/eeg_phase_space">eeg_phase_space</a>.</p>
-    </div>
+  <div class="eeg-body">
+    <div class="labels mono" aria-hidden="true"><span>Fp1</span><span>Fp2</span><span>C3</span><span>C4</span><span>O1</span><span>O2</span></div>
+    <canvas class="eeg-canvas" role="img" aria-label={Astro.props.lang === 'es' ? 'Seis canales de EEG sintético animados' : 'Six animated synthetic EEG channels'}></canvas>
   </div>
-</section>
+  <p class="eeg-note">{t.home.eegNote} <a href="https://github.com/RoshTzsche/eeg_phase_space">eeg_phase_space</a>.</p>
+</div>
 
 <script>
   const canvas = document.querySelector<HTMLCanvasElement>('.eeg-canvas');
@@ -51,7 +38,7 @@ const bands = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
     let colors = { fg: '', accent: '', line: '' };
     const readColors = () => {
       const cs = getComputedStyle(document.documentElement);
-      colors = { fg: cs.getPropertyValue('--fg-2').trim(), accent: cs.getPropertyValue('--accent').trim(), line: cs.getPropertyValue('--line').trim() };
+      colors = { fg: cs.getPropertyValue('--muted').trim(), accent: cs.getPropertyValue('--accent').trim(), line: cs.getPropertyValue('--line').trim() };
     };
     readColors();
     window.addEventListener('modechange', () => { readColors(); draw(); });
@@ -72,11 +59,11 @@ const bands = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
     }
 
     function draw() {
-      const W = canvas.width, H = canvas.height, row = H / 6, n = 400, dpr = window.devicePixelRatio || 1;
+      const W = canvas.width, H = canvas.height, row = H / 6, n = 220, dpr = window.devicePixelRatio || 1;
       ctx.clearRect(0, 0, W, H);
       ctx.strokeStyle = colors.line; ctx.lineWidth = dpr;
       for (let r = 1; r < 6; r++) { ctx.beginPath(); ctx.moveTo(0, r * row); ctx.lineTo(W, r * row); ctx.stroke(); }
-      ctx.lineWidth = 1.2 * dpr;
+      ctx.lineWidth = 1.1 * dpr;
       for (let ch = 0; ch < 6; ch++) {
         ctx.beginPath();
         for (let i = 0; i < n; i++) {
@@ -87,17 +74,6 @@ const bands = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
         ctx.strokeStyle = ch >= 4 ? colors.accent : colors.fg;
         ctx.stroke();
       }
-      // relative band power (illustrative), alpha-dominant
-      const base = [12, 14, 46, 20, 8], names = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
-      const raw = base.map((b, i) => b * (1 + 0.12 * Math.sin(t / 60 + i * 1.7)));
-      const sum = raw.reduce((a, b) => a + b, 0);
-      names.forEach((nm, i) => {
-        const pct = Math.round((raw[i] / sum) * 100);
-        const f = document.querySelector<HTMLElement>(`[data-band="${nm}"]`);
-        const p = document.querySelector<HTMLElement>(`[data-pct="${nm}"]`);
-        if (f) f.style.width = Math.min(100, pct * 1.8) + '%';
-        if (p) p.textContent = pct + '%';
-      });
     }
 
     new ResizeObserver(resize).observe(canvas);
@@ -114,25 +90,15 @@ const bands = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
 </script>
 
 <style>
-  .eeg { padding-block: 72px 8px; display: flex; flex-direction: column; gap: 20px; }
-  .eeg-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px; }
-  .eeg-head h2 { margin: 0; font-size: 15px; font-weight: 500; color: var(--muted); }
-  .live { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-  .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+  .eeg { display: flex; flex-direction: column; gap: 10px; opacity: 0.9; }
+  .eeg-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+  .live { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
   @keyframes pulse { 50% { opacity: 0.3; } }
-  .eeg-row { display: flex; flex-wrap: wrap; gap: 20px; }
-  .eeg-traces { flex: 999 1 600px; min-width: 0; display: flex; gap: 12px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
-  .labels { width: 32px; display: flex; flex-direction: column; justify-content: space-around; font-size: 12px; color: var(--muted); }
-  .eeg-canvas { flex: 1; min-width: 0; height: 300px; }
-  .eeg-bands { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
-  .small { margin: 0; font-size: 12px; }
-  .band { display: flex; align-items: center; gap: 10px; font-size: 12px; }
-  .name { width: 44px; color: var(--fg-2); }
-  .bar { flex: 1; height: 10px; border-radius: 3px; background: var(--line); overflow: hidden; }
-  .fill { display: block; height: 100%; width: 20%; background: var(--muted); transition: width 0.3s linear; }
-  .fill.alpha { background: var(--accent); }
-  .pct { width: 36px; text-align: right; color: var(--muted); }
-  .note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
-  .note a { color: var(--accent); }
+  .eeg-body { display: flex; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--surface-2) 70%, transparent); backdrop-filter: blur(4px); }
+  .labels { width: 28px; display: flex; flex-direction: column; justify-content: space-around; font-size: 11px; color: var(--muted); }
+  .eeg-canvas { flex: 1; min-width: 0; height: 240px; }
+  .eeg-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .eeg-note a { color: var(--accent); }
   @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
 </style>
