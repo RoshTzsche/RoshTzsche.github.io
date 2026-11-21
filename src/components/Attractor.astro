@@ -1,0 +1,98 @@
+---
+// Delay-coordinate reconstruction of a Lorenz signal, drawn on a canvas.
+// Only x(t) is used: v_i = (x_i, x_{i-τ}, x_{i-2τ}), then rotated and projected.
+interface Props { label: string; aspect?: string; animate?: boolean }
+const { label, aspect = '1 / 1', animate = true } = Astro.props;
+---
+<div class="attractor-box" style={`aspect-ratio: ${aspect}`}>
+  <canvas class="attractor" role="img" aria-label={label} data-animate={animate ? '1' : '0'}></canvas>
+</div>
+
+<script>
+  function lorenzX(): number[] {
+    let x = 1, y = 1, z = 1;
+    const s = 10, r = 28, b = 8 / 3, dt = 0.006, xs: number[] = [];
+    for (let i = 0; i < 9000; i++) {
+      const dx = s * (y - x), dy = x * (r - z) - y, dz = x * y - b * z;
+      x += dx * dt; y += dy * dt; z += dz * dt;
+      if (i > 600 && i % 2 === 0) xs.push(x);
+    }
+    return xs;
+  }
+
+  // Embed with delay tau, centre, and change to axes that separate the
+  // structure from the diagonal x_i ≈ x_{i-τ} ≈ x_{i-2τ}.
+  function embed(xs: number[], tau = 9) {
+    const pts: [number, number, number][] = [];
+    for (let i = 2 * tau; i < xs.length; i++) pts.push([xs[i], xs[i - tau], xs[i - 2 * tau]]);
+    const m = [0, 0, 0];
+    for (const p of pts) { m[0] += p[0]; m[1] += p[1]; m[2] += p[2]; }
+    m[0] /= pts.length; m[1] /= pts.length; m[2] /= pts.length;
+    return pts.map(([a, b, c]) => {
+      a -= m[0]; b -= m[1]; c -= m[2];
+      return [a - b, a + b - 2 * c, a + b + c] as [number, number, number]; // u, v, w
+    });
+  }
+
+  const UVW = embed(lorenzX());
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLCanvasElement>('canvas.attractor').forEach((canvas) => {
+    const ctx = canvas.getContext('2d')!;
+    let angle = 0.6, visible = true, color = '';
+    const readColor = () => { color = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); };
+    readColor();
+    window.addEventListener('modechange', () => { readColor(); draw(); });
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const r = canvas.getBoundingClientRect();
+      canvas.width = Math.round(r.width * dpr);
+      canvas.height = Math.round(r.height * dpr);
+      draw();
+    };
+
+    function draw() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const k = Math.min(W, H) / 46;
+      const ca = Math.cos(angle), sa = Math.sin(angle), tilt = 0.55, ct = Math.cos(tilt), st = Math.sin(tilt);
+      ctx.beginPath();
+      for (let i = 0; i < UVW.length; i++) {
+        const [u, v, w] = UVW[i];
+        const X = u * ca + w * 0.35 * sa;
+        const Z = -u * sa + w * 0.35 * ca;
+        const Y = v * 0.62 * ct - Z * st;
+        const px = W / 2 + X * k, py = H / 2 + Y * k;
+        if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+      }
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = Math.max(0.6, (window.devicePixelRatio || 1) * 0.6);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    new ResizeObserver(resize).observe(canvas);
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(canvas);
+
+    if (canvas.dataset.animate === '1' && !reduce) {
+      const loop = () => {
+        if (visible && !document.hidden) { angle += 0.004; draw(); }
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    }
+  });
+</script>
+
+<style>
+  .attractor-box {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  canvas { width: 100%; height: 100%; }
+</style>

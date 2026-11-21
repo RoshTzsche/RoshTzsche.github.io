@@ -1,0 +1,67 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { useT, getStaticLangPaths, otherLang, type Lang } from '../../../i18n/ui';
+import { postsIn, postUrl, formatDate, type Post } from '../../../lib/posts';
+
+export const getStaticPaths = getStaticLangPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+const posts = await postsIn(lang);
+const shelves: { id: string; title: string; items: Post[] }[] = [
+  { id: 'science', title: t.writing.science, items: posts.filter((p) => p.data.shelf === 'science') },
+  { id: 'chess-personal', title: t.writing.chessPersonal, items: posts.filter((p) => p.data.shelf !== 'science') },
+];
+---
+<Base lang={lang} title={t.writing.kicker.toLowerCase()} defaultMode="paper" current="writing" altPath={`/${otherLang(lang)}/writing/`}>
+  <section class="wrap head">
+    <p class="kicker">{t.writing.kicker}</p>
+    <h1>{t.writing.title}</h1>
+    <p class="sub">{t.writing.sub}</p>
+    <nav class="tabs" aria-label={t.writing.kicker}>
+      {shelves.map((s) => <a class="tab" href={`#${s.id}`}>{s.title}</a>)}
+    </nav>
+  </section>
+
+  {shelves.map((s) => (
+    <section id={s.id} class="wrap shelf" aria-labelledby={`${s.id}-h`}>
+      <h2 id={`${s.id}-h`} class="kicker">{s.title}</h2>
+      {s.items.length === 0 ? (
+        <p class="empty">{t.writing.empty}</p>
+      ) : (
+        <ul>
+          {s.items.map((p) => (
+            <li>
+              <a href={postUrl(p)}>
+                <span class="title">
+                  {p.data.draft && <span class="draft mono">{t.writing.draft}</span>}
+                  {p.data.title}
+                </span>
+                <span class="summary">{p.data.summary}</span>
+                <span class="meta mono">{formatDate(p.data.date, lang)} · {p.data.tags.join(', ')}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  ))}
+</Base>
+
+<style>
+  .head { padding-block: 72px 24px; display: flex; flex-direction: column; gap: 16px; }
+  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px); line-height: 1.08; font-weight: 500; max-width: 820px; }
+  .sub { margin: 0; font-size: 21px; line-height: 1.55; color: var(--fg-2); max-width: 720px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+  .tab { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 17px; }
+  .shelf { padding-block: 40px 0; }
+  .shelf h2 { margin-bottom: 8px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { border-top: 1px solid var(--line); }
+  li:last-child { border-bottom: 1px solid var(--line); }
+  li a { display: flex; flex-direction: column; gap: 6px; padding: 22px 0; }
+  .title { font-family: var(--font-display); font-size: 26px; line-height: 1.25; }
+  .summary { color: var(--fg-2); font-size: 17px; }
+  .meta { font-size: 13px; color: var(--muted); }
+  .draft { font-size: 11px; padding: 2px 6px; margin-right: 10px; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; vertical-align: middle; }
+  .empty { color: var(--muted); font-style: italic; }
+</style>

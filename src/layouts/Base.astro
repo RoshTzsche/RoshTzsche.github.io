@@ -1,0 +1,117 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import Onboarding from '../components/Onboarding.astro';
+import FloatingMode from '../components/FloatingMode.astro';
+import { useT, otherLang, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  defaultMode?: 'terminal' | 'paper';
+  current?: string;
+  altPath?: string; // same page in the other language
+}
+
+const { lang, title, description, defaultMode = 'terminal', current = '', altPath } = Astro.props;
+const t = useT(lang);
+const fullTitle = title ? `${title} — Rosh Guadiana Páez` : 'Rosh Guadiana Páez';
+const desc = description ?? t.meta.description;
+const other = otherLang(lang);
+const alt = altPath ?? `/${other}/`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang={lang} data-mode={defaultMode} data-default-mode={defaultMode}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={desc} />
+  <link rel="canonical" href={canonical} />
+  <link rel="alternate" hreflang={other} href={new URL(alt, Astro.site)} />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={desc} />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content={lang === 'es' ? 'es_MX' : 'en_US'} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap"
+  />
+  <!-- Apply the saved mode before first paint (no flash) -->
+  <script is:inline>
+    (function () {
+      var m = null;
+      try { m = localStorage.getItem('mode'); } catch (e) {}
+      if (m === 'terminal' || m === 'paper') document.documentElement.dataset.mode = m;
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">{lang === 'es' ? 'Saltar al contenido' : 'Skip to content'}</a>
+  <Nav lang={lang} current={current} altPath={alt} />
+  <main id="main">
+    <slot />
+  </main>
+  <Footer lang={lang} />
+  <FloatingMode lang={lang} />
+  <Onboarding lang={lang} />
+
+  <script>
+    // ---- mode switching (buttons + "D" key) ----
+    const root = document.documentElement;
+    const setMode = (mode: string) => {
+      root.dataset.mode = mode;
+      try { localStorage.setItem('mode', mode); } catch {}
+      document.querySelectorAll<HTMLElement>('[data-mode-set]').forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.modeSet === mode))
+      );
+      window.dispatchEvent(new CustomEvent('modechange', { detail: mode }));
+    };
+    const toggle = () => setMode(root.dataset.mode === 'paper' ? 'terminal' : 'paper');
+
+    document.querySelectorAll<HTMLElement>('[data-mode-set]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.modeSet === root.dataset.mode));
+      b.addEventListener('click', () => setMode(b.dataset.modeSet!));
+    });
+    document.querySelectorAll<HTMLElement>('[data-mode-toggle]').forEach((b) =>
+      b.addEventListener('click', toggle)
+    );
+    window.addEventListener('keydown', (e) => {
+      if (e.key !== 'd' && e.key !== 'D') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      toggle();
+    });
+
+    // ---- remember an explicit language choice ----
+    document.querySelectorAll<HTMLElement>('[data-lang-link]').forEach((a) =>
+      a.addEventListener('click', () => {
+        try { localStorage.setItem('lang', a.dataset.langLink!); } catch {}
+      })
+    );
+  </script>
+</body>
+</html>
+
+<style is:global>
+  .skip {
+    position: absolute;
+    left: -9999px;
+    top: 8px;
+    z-index: 100;
+    padding: 8px 14px;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 6px;
+  }
+  .skip:focus {
+    left: 8px;
+  }
+</style>

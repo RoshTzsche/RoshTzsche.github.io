@@ -1,0 +1,138 @@
+---
+// Synthetic 6-channel EEG (eyes closed): alpha 10 Hz strongest over O1/O2,
+// beta 21 Hz, theta 5.5 Hz, AR(1) noise, and eye blinks on Fp1/Fp2.
+import { useT, type Lang } from '../i18n/ui';
+interface Props { lang: Lang }
+const t = useT(Astro.props.lang);
+const bands = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
+---
+<section class="wrap eeg" aria-labelledby="eeg-h">
+  <div class="eeg-head">
+    <h2 id="eeg-h" class="mono"><span class="accent">~ ❯</span> stream --channels Fp1 Fp2 C3 C4 O1 O2 --fs 256</h2>
+    <span class="mono live"><span class="dot" aria-hidden="true"></span>{t.home.eegCaption}</span>
+  </div>
+  <div class="eeg-row">
+    <div class="eeg-traces">
+      <div class="labels mono" aria-hidden="true"><span>Fp1</span><span>Fp2</span><span>C3</span><span>C4</span><span>O1</span><span>O2</span></div>
+      <canvas class="eeg-canvas" role="img" aria-label="Six animated EEG channel traces"></canvas>
+    </div>
+    <div class="eeg-bands">
+      <p class="mono muted small">{t.home.eegBands}</p>
+      {bands.map((b) => (
+        <div class="band mono">
+          <span class="name">{b}</span>
+          <span class="bar"><span class:list={['fill', { alpha: b === 'alpha' }]} data-band={b}></span></span>
+          <span class="pct" data-pct={b}></span>
+        </div>
+      ))}
+      <p class="note">{t.home.eegNote} <a href="https://github.com/RoshTzsche/eeg_phase_space">eeg_phase_space</a>.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  const canvas = document.querySelector<HTMLCanvasElement>('.eeg-canvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d')!;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // AR(1) noise per channel: n_k = 0.6 n_{k-1} + ε_k
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5;
+    const N = 4096;
+    const noise = Array.from({ length: 6 }, () => {
+      const a = new Float32Array(N); let prev = 0;
+      for (let i = 0; i < N; i++) { prev = 0.6 * prev + rnd(); a[i] = prev; }
+      return a;
+    });
+    // [alpha, beta, theta, blink]
+    const cfg = [[0.25, 0.35, 0.3, 1], [0.25, 0.35, 0.3, 1], [0.5, 0.3, 0.25, 0], [0.5, 0.3, 0.25, 0], [1.0, 0.15, 0.2, 0], [0.95, 0.15, 0.2, 0]];
+    let t = 0, visible = true;
+    let colors = { fg: '', accent: '', line: '' };
+    const readColors = () => {
+      const cs = getComputedStyle(document.documentElement);
+      colors = { fg: cs.getPropertyValue('--fg-2').trim(), accent: cs.getPropertyValue('--accent').trim(), line: cs.getPropertyValue('--line').trim() };
+    };
+    readColors();
+    window.addEventListener('modechange', () => { readColors(); draw(); });
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1, r = canvas.getBoundingClientRect();
+      canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr); draw();
+    };
+
+    function sample(ch: number, k: number) {
+      const c = cfg[ch], ts = (k / 256) * 1.6;
+      let v = c[0] * Math.sin(2 * Math.PI * 10 * ts + ch) * (0.7 + 0.3 * Math.sin(2 * Math.PI * 0.4 * ts + ch))
+            + c[1] * Math.sin(2 * Math.PI * 21 * ts + 2 * ch)
+            + c[2] * Math.sin(2 * Math.PI * 5.5 * ts + 0.5 * ch)
+            + 0.35 * noise[ch][k % N];
+      if (c[3]) { const ph = (k % 700) - 60; v += 3.2 * Math.exp(-(ph * ph) / 260); }
+      return v;
+    }
+
+    function draw() {
+      const W = canvas.width, H = canvas.height, row = H / 6, n = 400, dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = colors.line; ctx.lineWidth = dpr;
+      for (let r = 1; r < 6; r++) { ctx.beginPath(); ctx.moveTo(0, r * row); ctx.lineTo(W, r * row); ctx.stroke(); }
+      ctx.lineWidth = 1.2 * dpr;
+      for (let ch = 0; ch < 6; ch++) {
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+          const v = Math.max(-2, Math.min(2, sample(ch, t + i)));
+          const x = (i / (n - 1)) * W, y = row * (ch + 0.5) - v * row * 0.22;
+          if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+        }
+        ctx.strokeStyle = ch >= 4 ? colors.accent : colors.fg;
+        ctx.stroke();
+      }
+      // relative band power (illustrative), alpha-dominant
+      const base = [12, 14, 46, 20, 8], names = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
+      const raw = base.map((b, i) => b * (1 + 0.12 * Math.sin(t / 60 + i * 1.7)));
+      const sum = raw.reduce((a, b) => a + b, 0);
+      names.forEach((nm, i) => {
+        const pct = Math.round((raw[i] / sum) * 100);
+        const f = document.querySelector<HTMLElement>(`[data-band="${nm}"]`);
+        const p = document.querySelector<HTMLElement>(`[data-pct="${nm}"]`);
+        if (f) f.style.width = Math.min(100, pct * 1.8) + '%';
+        if (p) p.textContent = pct + '%';
+      });
+    }
+
+    new ResizeObserver(resize).observe(canvas);
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(canvas);
+    if (!reduce) {
+      let last = 0;
+      const loop = (ts: number) => {
+        if (visible && !document.hidden && ts - last > 33) { t += 3; draw(); last = ts; }
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    }
+  }
+</script>
+
+<style>
+  .eeg { padding-block: 72px 8px; display: flex; flex-direction: column; gap: 20px; }
+  .eeg-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .eeg-head h2 { margin: 0; font-size: 15px; font-weight: 500; color: var(--muted); }
+  .live { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+  .eeg-row { display: flex; flex-wrap: wrap; gap: 20px; }
+  .eeg-traces { flex: 999 1 600px; min-width: 0; display: flex; gap: 12px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+  .labels { width: 32px; display: flex; flex-direction: column; justify-content: space-around; font-size: 12px; color: var(--muted); }
+  .eeg-canvas { flex: 1; min-width: 0; height: 300px; }
+  .eeg-bands { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+  .small { margin: 0; font-size: 12px; }
+  .band { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .name { width: 44px; color: var(--fg-2); }
+  .bar { flex: 1; height: 10px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .fill { display: block; height: 100%; width: 20%; background: var(--muted); transition: width 0.3s linear; }
+  .fill.alpha { background: var(--accent); }
+  .pct { width: 36px; text-align: right; color: var(--muted); }
+  .note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+  .note a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+</style>

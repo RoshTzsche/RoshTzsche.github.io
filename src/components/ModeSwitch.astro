@@ -1,0 +1,62 @@
+---
+import { useT, type Lang } from '../i18n/ui';
+interface Props { lang: Lang }
+const t = useT(Astro.props.lang);
+---
+<div class="mode-switch" role="group" aria-label={t.mode.label} data-onboard-target>
+  <button type="button" data-mode-set="terminal">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-5-6-5"></path><path d="M12 19h8"></path></svg>
+    {t.mode.terminal}
+  </button>
+  <button type="button" data-mode-set="paper" class="paper-btn">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><path d="M9 13h7M9 17h5"></path></svg>
+    {t.mode.paper}
+  </button>
+  <kbd title={t.mode.press}>D</kbd>
+</div>
+
+<style>
+  .mode-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    transition: box-shadow 0.3s ease;
+  }
+  .mode-switch button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .mode-switch .paper-btn {
+    font-family: Newsreader, Georgia, serif;
+    font-size: 17px;
+    font-style: italic;
+  }
+  .mode-switch button[aria-pressed='true'] {
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 700;
+  }
+  .mode-switch kbd {
+    margin: 0 8px 0 4px;
+  }
+  .mode-switch.highlight {
+    box-shadow: 0 0 0 3px var(--accent), 0 0 24px var(--accent);
+  }
+  @media (max-width: 520px) {
+    .mode-switch kbd { display: none; }
+  }
+</style>

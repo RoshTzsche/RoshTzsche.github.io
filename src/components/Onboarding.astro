@@ -1,0 +1,111 @@
+---
+import { useT, type Lang } from '../i18n/ui';
+interface Props { lang: Lang }
+const t = useT(Astro.props.lang);
+---
+<div class="ob-backdrop" hidden data-onboarding>
+  <div class="ob" role="dialog" aria-modal="true" aria-labelledby="ob-title">
+    <span class="ob-arrow" aria-hidden="true"></span>
+    <p class="kicker accent">{t.onboarding.kicker}</p>
+    <h2 id="ob-title">{t.onboarding.title}</h2>
+    <div class="ob-modes">
+      <div class="ob-mode">
+        <div class="ob-preview term" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p><strong class="mono">{t.mode.terminal}</strong><br />{t.onboarding.terminalDesc}</p>
+      </div>
+      <div class="ob-mode">
+        <div class="ob-preview paper" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p><strong class="serif">{t.mode.paper}</strong><br />{t.onboarding.paperDesc}</p>
+      </div>
+    </div>
+    <p class="ob-body">{t.onboarding.body} <kbd>D</kbd> {t.onboarding.nod}</p>
+    <div class="ob-actions">
+      <button type="button" class="btn ob-paper" data-mode-set="paper" data-onboard-close>{t.onboarding.tryPaper}</button>
+      <button type="button" class="btn" data-onboard-close>{t.onboarding.stay}</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const el = document.querySelector<HTMLElement>('[data-onboarding]');
+  const target = document.querySelector<HTMLElement>('[data-onboard-target]');
+  let seen = true;
+  try { seen = localStorage.getItem('onboarded') === '1'; } catch {}
+  if (el && !seen) {
+    el.hidden = false;
+    target?.classList.add('highlight');
+    const close = () => {
+      el.hidden = true;
+      target?.classList.remove('highlight');
+      try { localStorage.setItem('onboarded', '1'); } catch {}
+    };
+    el.querySelectorAll('[data-onboard-close]').forEach((b) => b.addEventListener('click', close));
+    el.addEventListener('click', (e) => { if (e.target === el) close(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    el.querySelector<HTMLElement>('[data-onboard-close]:last-child')?.focus();
+  }
+</script>
+
+<style>
+  .ob-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgba(6, 7, 10, 0.6);
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 96px 32px 32px;
+  }
+  .ob-backdrop[hidden] { display: none; }
+  .ob {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: var(--shadow);
+    font-family: var(--font-body);
+  }
+  .ob-arrow {
+    position: absolute;
+    top: -8px;
+    right: 140px;
+    width: 14px;
+    height: 14px;
+    background: var(--surface);
+    border-left: 1px solid var(--line-strong);
+    border-top: 1px solid var(--line-strong);
+    transform: rotate(45deg);
+  }
+  h2 { margin: 0; font-family: var(--font-display); font-size: 24px; line-height: 1.25; }
+  .ob-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .ob-mode { border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .ob-mode p { margin: 0; padding: 10px 12px; font-size: 13px; line-height: 1.45; color: var(--fg-2); }
+  .ob-mode strong { color: var(--fg); }
+  .serif { font-family: Newsreader, Georgia, serif; font-style: italic; }
+  .ob-preview { height: 72px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .ob-preview span { height: 5px; border-radius: 2px; }
+  .ob-preview.term { background: #0e0f13; }
+  .ob-preview.term span { background: #353a45; }
+  .ob-preview.term span:first-child { width: 60%; height: 6px; background: #b48ead; }
+  .ob-preview.term span:nth-child(2) { width: 85%; }
+  .ob-preview.term span:nth-child(3) { width: 70%; }
+  .ob-preview.paper { background: #f4efe4; }
+  .ob-preview.paper span { background: #b9ae98; }
+  .ob-preview.paper span:first-child { width: 70%; height: 7px; background: #1f1d1a; }
+  .ob-preview.paper span:nth-child(2) { width: 90%; }
+  .ob-preview.paper span:nth-child(3) { width: 80%; }
+  .ob-body { margin: 0; font-size: 15px; line-height: 1.6; color: var(--fg-2); }
+  .ob-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .ob-paper { background: #f4efe4; color: #1f1d1a; border-color: #d9d0bf; font-family: Newsreader, Georgia, serif; font-style: italic; font-size: 16px; }
+  @media (max-width: 640px) {
+    .ob-backdrop { padding: 16px; align-items: flex-end; }
+    .ob-arrow { display: none; }
+  }
+</style>

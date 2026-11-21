@@ -1,0 +1,50 @@
+# When a post is pushed in only one language, translate it with AI
+# and open a pull request with the other language for review.
+name: Translate posts
+
+on:
+  push:
+    branches: [main]
+    paths: ['src/content/writing/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Translate missing posts
+        id: tr
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+        run: node scripts/translate.mjs
+
+      - name: Open pull request
+        if: steps.tr.outputs.created != ''
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: auto-translate
+          delete-branch: true
+          commit-message: 'Add AI translation of new posts'
+          author: 'RoshTzsche <roshguadiana@gmail.com>'
+          committer: 'RoshTzsche <roshguadiana@gmail.com>'
+          title: 'Traducción automática: revisar antes de publicar'
+          body: |
+            Traducción generada con IA de:
+
+            `${{ steps.tr.outputs.created }}`
+
+            Revisa el texto (sobre todo terminología y fórmulas), corrige lo necesario en este PR,
+            cambia `reviewed: false` a `reviewed: true` si quieres, y haz merge para publicar.

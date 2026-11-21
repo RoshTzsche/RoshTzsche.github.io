@@ -1,0 +1,24 @@
+---
+// Static board from a FEN position. flip = view from Black's side.
+interface Props { fen: string; flip?: boolean; label: string; size?: string }
+const { fen, flip = false, label, size = '260px' } = Astro.props;
+const glyph: Record<string, string> = {
+  K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙',
+  k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟',
+};
+let rows = fen.split(' ')[0].split('/').map((r) =>
+  r.split('').flatMap((c) => (/\d/.test(c) ? Array(Number(c)).fill('') : [(glyph[c] ?? '') + (glyph[c] ? '\uFE0E' : '')]))
+);
+if (flip) rows = rows.reverse().map((r) => r.reverse());
+const squares = rows.flatMap((row, r) => row.map((piece, f) => ({ piece, light: (r + f) % 2 === 0 })));
+---
+<div class="board" role="img" aria-label={label} style={`max-width: ${size}`}>
+  {squares.map((s) => <div class:list={['sq', s.light ? 'light' : 'dark']}>{s.piece}</div>)}
+</div>
+
+<style>
+  .board { width: 100%; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border: 2px solid #3d372e; }
+  .sq { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: clamp(16px, 2.6vw, 26px); line-height: 1; color: #1f1d1a; font-family: 'DejaVu Sans', 'Segoe UI Symbol', serif; }
+  .light { background: #efe6d2; }
+  .dark { background: #b9a27e; }
+</style>

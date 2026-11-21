@@ -1,0 +1,87 @@
+---
+// Interactive replay of a PGN, with chess.js handling the moves.
+import { useT, type Lang } from '../i18n/ui';
+interface Props { pgn: string; lang: Lang }
+const { pgn, lang } = Astro.props;
+const t = useT(lang).chess.viewer;
+---
+<div class="pgn" data-pgn={pgn}>
+  <div class="pgn-board" role="img" aria-live="polite"></div>
+  <div class="pgn-side">
+    <div class="pgn-controls">
+      <button type="button" class="btn" data-go="start" aria-label={t.start}>⏮</button>
+      <button type="button" class="btn" data-go="prev" aria-label={t.prev}>◀</button>
+      <button type="button" class="btn" data-go="next" aria-label={t.next}>▶</button>
+      <button type="button" class="btn" data-go="end" aria-label={t.end}>⏭</button>
+    </div>
+    <ol class="pgn-moves mono"></ol>
+  </div>
+</div>
+
+<script>
+  import { Chess } from 'chess.js';
+  const G: Record<string, string> = { wk: '♔', wq: '♕', wr: '♖', wb: '♗', wn: '♘', wp: '♙', bk: '♚', bq: '♛', br: '♜', bb: '♝', bn: '♞', bp: '♟' };
+
+  document.querySelectorAll<HTMLElement>('.pgn').forEach((root) => {
+    const full = new Chess();
+    try { full.loadPgn(root.dataset.pgn || ''); } catch { root.textContent = 'Invalid PGN'; return; }
+    const moves = full.history();
+    const boardEl = root.querySelector<HTMLElement>('.pgn-board')!;
+    const list = root.querySelector<HTMLOListElement>('.pgn-moves')!;
+    let ply = 0;
+
+    // move list: one <li> per full move
+    for (let i = 0; i < moves.length; i += 2) {
+      const li = document.createElement('li');
+      [i, i + 1].forEach((k) => {
+        if (k >= moves.length) return;
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = moves[k]; b.dataset.ply = String(k + 1);
+        b.addEventListener('click', () => go(k + 1));
+        li.appendChild(b);
+      });
+      list.appendChild(li);
+    }
+
+    function go(p: number) {
+      ply = Math.max(0, Math.min(moves.length, p));
+      const g = new Chess();
+      for (let i = 0; i < ply; i++) g.move(moves[i]);
+      boardEl.innerHTML = '';
+      g.board().forEach((row, r) => row.forEach((sq, f) => {
+        const d = document.createElement('div');
+        d.className = 'sq ' + ((r + f) % 2 === 0 ? 'light' : 'dark');
+        d.textContent = sq ? G[sq.color + sq.type] + '\uFE0E' : '';
+        boardEl.appendChild(d);
+      }));
+      boardEl.setAttribute('aria-label', ply ? `After ${moves[ply - 1]}` : 'Starting position');
+      list.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.ply === String(ply)));
+    }
+
+    root.querySelectorAll<HTMLButtonElement>('[data-go]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const a = b.dataset.go;
+        go(a === 'start' ? 0 : a === 'end' ? moves.length : a === 'prev' ? ply - 1 : ply + 1);
+      })
+    );
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') go(ply - 1);
+      if (e.key === 'ArrowRight') go(ply + 1);
+    });
+    go(0);
+  });
+</script>
+
+<style is:global>
+  .pgn { display: flex; flex-wrap: wrap; gap: 24px; margin: 2em 0; }
+  .pgn-board { flex: 0 1 420px; width: 100%; max-width: 420px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border: 2px solid #3d372e; }
+  .pgn-board .sq { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 4vw, 36px); line-height: 1; color: #1f1d1a; }
+  .pgn-board .light { background: #efe6d2; }
+  .pgn-board .dark { background: #b9a27e; }
+  .pgn-side { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .pgn-controls { display: flex; gap: 8px; }
+  .pgn-controls .btn { min-height: 44px; min-width: 44px; padding: 0 12px; justify-content: center; }
+  .pgn-moves { margin: 0; padding-left: 2.2em; max-height: 360px; overflow-y: auto; font-size: 14px; }
+  .pgn-moves button { border: 0; background: none; color: var(--fg-2); font: inherit; padding: 2px 6px; border-radius: 4px; cursor: pointer; min-width: 52px; text-align: left; }
+  .pgn-moves button.on { background: var(--accent); color: var(--on-accent); }
+</style>

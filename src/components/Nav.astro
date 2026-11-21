@@ -1,0 +1,117 @@
+---
+import ModeSwitch from './ModeSwitch.astro';
+import { useT, type Lang } from '../i18n/ui';
+
+interface Props { lang: Lang; current: string; altPath: string }
+const { lang, current, altPath } = Astro.props;
+const t = useT(lang);
+const links = [
+  { key: 'projects', href: `/${lang}/#projects`, label: t.nav.projects },
+  { key: 'biomedical', href: `/${lang}/#biomedical`, label: t.nav.biomedical },
+  { key: 'math', href: `/${lang}/#math`, label: t.nav.math },
+  { key: 'writing', href: `/${lang}/writing/`, label: t.nav.writing },
+  { key: 'chess', href: `/${lang}/chess/`, label: t.nav.chess },
+  { key: 'cv', href: '/cv.pdf', label: t.nav.cv },
+];
+---
+<header class="nav">
+  <nav class="wrap nav-inner" aria-label="Main">
+    <a class="brand" href={`/${lang}/`}>
+      <span class="term-only"><span class="accent">rosh</span>@guadiana<span class="muted">:~$</span></span>
+      <span class="paper-only">Rosh Guadiana Páez</span>
+    </a>
+    <div class="nav-links">
+      {links.map((l) => (
+        <a href={l.href} aria-current={current === l.key ? 'page' : undefined} class:list={['nav-link', { active: current === l.key }]}>
+          <span class="term-only">./</span>{l.label}
+        </a>
+      ))}
+    </div>
+    <div class="nav-controls">
+      <ModeSwitch lang={lang} />
+      <div class="lang" role="group" aria-label={t.langSwitch}>
+        <a href={lang === 'es' ? undefined : altPath} data-lang-link="es" aria-current={lang === 'es' ? 'true' : undefined} lang="es">ES</a>
+        <span aria-hidden="true">|</span>
+        <a href={lang === 'en' ? undefined : altPath} data-lang-link="en" aria-current={lang === 'en' ? 'true' : undefined} lang="en">EN</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<style is:global>
+  :root[data-mode='terminal'] .paper-only { display: none; }
+  :root[data-mode='paper'] .term-only { display: none; }
+</style>
+
+<style>
+  .nav {
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+  }
+  .nav-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px 28px;
+    padding-block: 14px;
+  }
+  .brand {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  :root[data-mode='paper'] .brand {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+  }
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  :root[data-mode='paper'] .nav-links {
+    font-family: var(--font-display);
+    font-size: 17px;
+    text-transform: capitalize;
+  }
+  .nav-link {
+    color: var(--fg-2);
+    padding-block: 6px;
+  }
+  .nav-link.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+  }
+  .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .lang {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .lang a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 4px;
+    color: var(--muted);
+  }
+  .lang a[aria-current] {
+    color: var(--fg);
+    font-weight: 700;
+  }
+</style>

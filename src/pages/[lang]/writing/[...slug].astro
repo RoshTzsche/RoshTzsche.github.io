@@ -1,0 +1,54 @@
+---
+import 'katex/dist/katex.min.css';
+import { render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import PgnViewer from '../../../components/PgnViewer.astro';
+import { useT, otherLang, type Lang } from '../../../i18n/ui';
+import { allPosts, langOf, slugOf, formatDate, readingMinutes, type Post } from '../../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await allPosts();
+  return posts.map((post) => {
+    const lang = langOf(post);
+    const slug = slugOf(post);
+    const twin = posts.find((p) => langOf(p) === otherLang(lang) && slugOf(p) === slug);
+    return { params: { lang, slug }, props: { post, hasTwin: Boolean(twin) } };
+  });
+}
+
+const { post, hasTwin } = Astro.props as { post: Post; hasTwin: boolean };
+const lang = langOf(post);
+const t = useT(lang);
+const other = otherLang(lang);
+const altPath = hasTwin ? `/${other}/writing/${slugOf(post)}/` : `/${other}/writing/`;
+const { Content } = await render(post);
+const d = post.data;
+---
+<Base lang={lang} title={d.title} description={d.summary} defaultMode="paper" current="writing" altPath={altPath}>
+  <article class="wrap post">
+    <a class="back mono" href={`/${lang}/writing/`}>{t.writing.back}</a>
+    <header>
+      <p class="kicker">{t.shelf[d.shelf]} · {formatDate(d.date, lang)} · {readingMinutes(post.body)} {t.writing.minRead}</p>
+      <h1>{d.title}</h1>
+      <p class="summary">{d.summary}</p>
+      {d.translatedFrom && (
+        <p class="translated mono">
+          {t.writing.translatedNote} {d.reviewed ? t.writing.reviewedNote : t.writing.unreviewedNote}
+        </p>
+      )}
+    </header>
+    {d.pgn && <PgnViewer pgn={d.pgn} lang={lang} />}
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .post { padding-block: 48px 0; display: flex; flex-direction: column; gap: 28px; }
+  .back { font-size: 14px; color: var(--muted); }
+  header { display: flex; flex-direction: column; gap: 14px; max-width: 820px; }
+  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(34px, 5vw, 48px); line-height: 1.12; font-weight: 500; }
+  .summary { margin: 0; font-size: 21px; line-height: 1.55; font-style: italic; color: var(--fg-2); }
+  .translated { margin: 0; font-size: 13px; color: var(--muted); padding: 10px 14px; border: 1px dashed var(--line-strong); border-radius: 6px; align-self: flex-start; }
+</style>

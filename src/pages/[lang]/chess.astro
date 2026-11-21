@@ -1,0 +1,155 @@
+---
+import Base from '../../layouts/Base.astro';
+import ChessDiagram from '../../components/ChessDiagram.astro';
+import { useT, getStaticLangPaths, otherLang, type Lang } from '../../i18n/ui';
+import { postsIn, postUrl, formatDate } from '../../lib/posts';
+
+export const getStaticPaths = getStaticLangPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+
+// Ratings are fetched when the site is built (the deploy runs daily).
+// If an API fails, the last known values below are used.
+const LICHESS_USER = 'DracoKerouac';
+const CHESSCOM_USER = 'ugapor';
+let lichess = { rapid: 1957, bullet: 1942, blitz: 1703, puzzle: 1931, games: 2187 };
+let chesscom = { rapid: 1732, blitz: 1620, bullet: 1421, daily: 1154 };
+const UA = { 'User-Agent': 'roshguadiana.dev site build (contact: roshguadiana@gmail.com)' };
+
+try {
+  const r = await fetch(`https://lichess.org/api/user/${LICHESS_USER}`, { headers: UA });
+  if (r.ok) {
+    const j = await r.json();
+    lichess = {
+      rapid: j.perfs?.rapid?.rating ?? lichess.rapid,
+      bullet: j.perfs?.bullet?.rating ?? lichess.bullet,
+      blitz: j.perfs?.blitz?.rating ?? lichess.blitz,
+      puzzle: j.perfs?.puzzle?.rating ?? lichess.puzzle,
+      games: j.count?.all ?? lichess.games,
+    };
+  }
+} catch {}
+try {
+  const r = await fetch(`https://api.chess.com/pub/player/${CHESSCOM_USER}/stats`, { headers: UA });
+  if (r.ok) {
+    const j = await r.json();
+    chesscom = {
+      rapid: j.chess_rapid?.last?.rating ?? chesscom.rapid,
+      blitz: j.chess_blitz?.last?.rating ?? chesscom.blitz,
+      bullet: j.chess_bullet?.last?.rating ?? chesscom.bullet,
+      daily: j.chess_daily?.last?.rating ?? chesscom.daily,
+    };
+  }
+} catch {}
+
+const c = t.chess;
+const cards = [
+  { site: 'Lichess', user: LICHESS_USER, href: `https://lichess.org/@/${LICHESS_USER}`,
+    stats: [[c.rapid, lichess.rapid], [c.bullet, lichess.bullet], [c.blitz, lichess.blitz], [c.puzzles, lichess.puzzle]] },
+  { site: 'Chess.com', user: CHESSCOM_USER, href: `https://www.chess.com/member/${CHESSCOM_USER}`,
+    stats: [[c.rapid, chesscom.rapid], [c.blitz, chesscom.blitz], [c.bullet, chesscom.bullet], [c.daily, chesscom.daily]] },
+];
+
+// Repertoire. To change it, edit the FEN (copy it from Lichess's analysis board).
+const repertoire = [
+  { side: c.withBlack, flip: true, name: { es: 'India de Rey', en: "King's Indian Defence" },
+    moves: '1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O',
+    fen: 'rnbq1rk1/ppp1ppbp/3p1np1/8/2PPP3/2N2N2/PP3PPP/R1BQKB1R w KQ - 1 6' },
+  { side: c.withBlack, flip: true, name: { es: 'Siciliana', en: 'Sicilian Defence' },
+    moves: '1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3',
+    fen: 'rnbqkb1r/pp2pppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 2 5' },
+  { side: c.withWhite, flip: false, name: { es: 'Italiana', en: 'Italian Game' },
+    moves: '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5',
+    fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4' },
+  { side: c.withWhite, flip: false, name: { es: 'Escocesa', en: 'Scotch Game' },
+    moves: '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4',
+    fen: 'r1bqkbnr/pppp1ppp/2n5/8/3NP3/8/PPP2PPP/RNBQKB1R b KQkq - 0 4' },
+];
+
+const games = (await postsIn(lang)).filter((p) => p.data.shelf === 'chess');
+---
+<Base lang={lang} title={c.kicker.toLowerCase()} defaultMode="paper" current="chess" altPath={`/${otherLang(lang)}/chess/`}>
+  <section class="wrap head">
+    <p class="kicker">{c.kicker}</p>
+    <h1>{c.title}</h1>
+    <p class="sub">{c.sub(lichess.games)}</p>
+  </section>
+
+  <section class="wrap ratings" aria-label="Ratings">
+    {cards.map((card) => (
+      <div class="card">
+        <div class="card-head">
+          <h2>{card.site}</h2>
+          <a class="mono" href={card.href}>@{card.user}</a>
+        </div>
+        <dl>
+          {card.stats.map(([label, value]) => (
+            <div><dt class="mono">{label}</dt><dd>{value}</dd></div>
+          ))}
+        </dl>
+      </div>
+    ))}
+    <p class="mono note">{c.ratingsNote}</p>
+  </section>
+
+  <section class="rep" aria-labelledby="rep-h">
+    <div class="wrap rep-inner">
+      <p class="kicker">{c.repertoire}</p>
+      <h2 id="rep-h" class="h2">{c.whatIPlay}</h2>
+      <div class="rep-grid">
+        {repertoire.map((o) => (
+          <article>
+            <ChessDiagram fen={o.fen} flip={o.flip} label={o.name[lang]} />
+            <p class="mono side">{o.side}</p>
+            <h3>{o.name[lang]}</h3>
+            <p class="mono moves">{o.moves}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap games" aria-labelledby="games-h">
+    <p class="kicker">{c.games}</p>
+    <h2 id="games-h" class="h2">{c.gamesTitle}</h2>
+    {games.length === 0 ? (
+      <p class="empty">{c.noGames}</p>
+    ) : (
+      <ul>
+        {games.map((g) => (
+          <li><a href={postUrl(g)}><span class="title">{g.data.title}</span><span class="mono meta">{formatDate(g.data.date, lang)}</span></a></li>
+        ))}
+      </ul>
+    )}
+  </section>
+</Base>
+
+<style>
+  .head { padding-block: 72px 40px; display: flex; flex-direction: column; gap: 16px; }
+  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px); line-height: 1.08; font-weight: 500; }
+  .sub { margin: 0; font-size: 21px; line-height: 1.55; color: var(--fg-2); max-width: 720px; }
+  .ratings { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; padding-bottom: 56px; }
+  .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .card-head h2 { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 500; }
+  .card-head a { font-size: 14px; color: var(--accent); }
+  dl { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  dt { font-size: 12px; color: var(--muted); }
+  dd { margin: 4px 0 0; font-family: var(--font-display); font-size: 32px; font-weight: 500; }
+  .note { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--muted); }
+  .rep { background: var(--surface-2); border-block: 1px solid var(--line); }
+  .rep-inner { padding-block: 64px; display: flex; flex-direction: column; gap: 8px; }
+  .h2 { margin: 0 0 24px; font-family: var(--font-display); font-size: 36px; font-weight: 500; }
+  .rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 28px; }
+  .rep-grid article { display: flex; flex-direction: column; gap: 10px; }
+  .side { margin: 0; font-size: 12px; color: var(--muted); }
+  h3 { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 500; }
+  .moves { margin: 0; font-size: 13px; line-height: 1.6; color: var(--fg-2); }
+  .games { padding-block: 64px 0; }
+  .games ul { list-style: none; margin: 0; padding: 0; }
+  .games li { border-top: 1px solid var(--line); }
+  .games li:last-child { border-bottom: 1px solid var(--line); }
+  .games a { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 22px 0; }
+  .title { font-family: var(--font-display); font-size: 24px; }
+  .meta { font-size: 13px; color: var(--muted); }
+  .empty { color: var(--muted); font-style: italic; }
+</style>
