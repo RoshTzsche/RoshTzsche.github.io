@@ -5,7 +5,7 @@ interface Props { label: string; aspect?: string; animate?: boolean; bare?: bool
 const { label, aspect = '1 / 1', animate = true, bare = false } = Astro.props;
 ---
 <div class:list={['attractor-box', { bare }]} style={bare ? undefined : `aspect-ratio: ${aspect}`}>
-  <canvas class="attractor" role="img" aria-label={label} data-animate={animate ? '1' : '0'}></canvas>
+  <canvas class="attractor" role="img" aria-label={label} data-animate={animate ? '1' : '0'} data-bare={bare ? '1' : '0'}></canvas>
 </div>
 
 <script>
@@ -55,7 +55,13 @@ const { label, aspect = '1 / 1', animate = true, bare = false } = Astro.props;
     function draw() {
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-      const k = Math.min(W, H) / 40;
+      // Bare (background) mode: on wide screens sit right of centre, filling the height;
+      // on tall/phone screens centre it and fit the width.
+      const bare = canvas.dataset.bare === '1';
+      const wide = W / H > 1.15;
+      const cx = bare && wide ? W * 0.64 : W / 2;
+      const cy = bare && !wide ? H * 0.42 : H / 2;
+      const k = bare ? (wide ? Math.min(W * 0.62, H * 1.05) : Math.min(W * 1.1, H * 0.8)) / 40 : Math.min(W, H) / 40;
       const ca = Math.cos(angle), sa = Math.sin(angle), tilt = 0.55, ct = Math.cos(tilt), st = Math.sin(tilt);
       ctx.beginPath();
       for (let i = 0; i < UVW.length; i++) {
@@ -63,7 +69,7 @@ const { label, aspect = '1 / 1', animate = true, bare = false } = Astro.props;
         const X = u * ca + w * 0.35 * sa;
         const Z = -u * sa + w * 0.35 * ca;
         const Y = v * 0.62 * ct - Z * st;
-        const px = W / 2 + X * k, py = H / 2 + Y * k;
+        const px = cx + X * k, py = cy + Y * k;
         if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
       }
       ctx.strokeStyle = color;

@@ -100,5 +100,6 @@ const t = useT(Astro.props.lang);
   .eeg-canvas { flex: 1; min-width: 0; height: 240px; }
   .eeg-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
   .eeg-note a { color: var(--accent); }
+  @media (max-width: 560px) { .eeg-canvas { height: 170px; } }
   @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
 </style>

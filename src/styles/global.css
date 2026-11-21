@@ -16,7 +16,7 @@
   --font-display: 'JetBrains Mono', ui-monospace, monospace;
   --font-body: Inter, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --body-size: 17px;
+  --body-size: clamp(16px, 0.3vw + 13px, 18px);
   --radius: 10px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
@@ -36,7 +36,7 @@
   --font-display: Newsreader, Georgia, serif;
   --font-body: Newsreader, Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --body-size: 19px;
+  --body-size: clamp(17px, 0.35vw + 14px, 20px);
   --radius: 6px;
   --shadow: 0 10px 30px rgba(60, 45, 20, 0.18);
   color-scheme: light;
@@ -93,14 +93,9 @@ kbd {
 }
 
 .wrap {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding-inline: 32px;
-}
-@media (max-width: 640px) {
-  .wrap {
-    padding-inline: 20px;
-  }
+  padding-inline: clamp(18px, 4vw, 64px);
 }
 
 .mono {
@@ -150,7 +145,7 @@ kbd {
 
 .grid-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 20px;
 }
 
@@ -181,7 +176,7 @@ kbd {
 
 /* ---------- Markdown prose (posts) ---------- */
 .prose {
-  font-size: 19px;
+  font-size: clamp(17px, 0.4vw + 14px, 20px);
   line-height: 1.75;
   max-width: 70ch;
 }

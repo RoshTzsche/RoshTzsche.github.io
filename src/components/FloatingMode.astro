@@ -53,8 +53,11 @@ const t = useT(Astro.props.lang);
   .floating-mode kbd {
     font-style: normal;
   }
+  /* phones: a round icon button that doesn't cover the content */
   @media (max-width: 640px) {
-    .floating-mode { right: 14px; bottom: 14px; }
+    .floating-mode { right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); width: 52px; padding: 0; justify-content: center; }
     .floating-mode kbd { display: none; }
+    .floating-mode span { font-size: 0; gap: 0; }
+    .floating-mode span svg { width: 22px; height: 22px; }
   }
 </style>

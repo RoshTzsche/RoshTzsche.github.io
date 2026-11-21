@@ -6,11 +6,11 @@ const t = useT(Astro.props.lang);
 <div class="mode-switch" role="group" aria-label={t.mode.label} data-onboard-target>
   <button type="button" data-mode-set="terminal">
     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-5-6-5"></path><path d="M12 19h8"></path></svg>
-    {t.mode.terminal}
+    <span class="lbl">{t.mode.terminal}</span>
   </button>
   <button type="button" data-mode-set="paper" class="paper-btn">
     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><path d="M9 13h7M9 17h5"></path></svg>
-    {t.mode.paper}
+    <span class="lbl">{t.mode.paper}</span>
   </button>
   <kbd title={t.mode.press}>D</kbd>
 </div>
@@ -56,7 +56,12 @@ const t = useT(Astro.props.lang);
   .mode-switch.highlight {
     box-shadow: 0 0 0 3px var(--accent), 0 0 24px var(--accent);
   }
-  @media (max-width: 520px) {
+  @media (max-width: 960px) {
     .mode-switch kbd { display: none; }
+  }
+  /* phones: icons only, still 44px touch targets */
+  @media (max-width: 600px) {
+    .mode-switch .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .mode-switch button { min-width: 44px; min-height: 40px; padding: 0 12px; justify-content: center; }
   }
 </style>

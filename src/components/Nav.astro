@@ -20,7 +20,10 @@ const links = [
       <span class="term-only"><span class="accent">rosh</span>@guadiana<span class="muted">:~$</span></span>
       <span class="paper-only">Rosh Guadiana Páez</span>
     </a>
-    <div class="nav-links">
+    <button type="button" class="menu-btn" aria-expanded="false" aria-controls="nav-links" aria-label={lang === 'es' ? 'Menú' : 'Menu'}>
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path class="l1" d="M4 7h16"></path><path class="l2" d="M4 12h16"></path><path class="l3" d="M4 17h16"></path></svg>
+    </button>
+    <div class="nav-links" id="nav-links">
       {links.map((l) => (
         <a href={l.href} aria-current={current === l.key ? 'page' : undefined} class:list={['nav-link', { active: current === l.key }]}>
           <span class="term-only">./</span>{l.label}
@@ -37,6 +40,23 @@ const links = [
     </div>
   </nav>
 </header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('.nav');
+  const btn = document.querySelector<HTMLButtonElement>('.menu-btn');
+  const links = document.getElementById('nav-links');
+  // expose the nav height so full-screen sections can subtract it
+  const setH = () => header && document.documentElement.style.setProperty('--nav-h', header.offsetHeight + 'px');
+  setH(); new ResizeObserver(setH).observe(header!);
+  btn?.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', String(open));
+    links?.classList.toggle('open', open);
+  });
+  links?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => {
+    btn?.setAttribute('aria-expanded', 'false'); links.classList.remove('open');
+  }));
+</script>
 
 <style is:global>
   :root[data-mode='terminal'] .paper-only { display: none; }
@@ -113,5 +133,46 @@ const links = [
   .lang a[aria-current] {
     color: var(--fg);
     font-weight: 700;
+  }
+  .menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .menu-btn path { transition: transform 0.2s ease, opacity 0.2s ease; transform-origin: 12px 12px; }
+  .menu-btn[aria-expanded='true'] .l1 { transform: translateY(5px) rotate(45deg); }
+  .menu-btn[aria-expanded='true'] .l2 { opacity: 0; }
+  .menu-btn[aria-expanded='true'] .l3 { transform: translateY(-5px) rotate(-45deg); }
+
+  /* ---------- phones & small tablets ---------- */
+  @media (max-width: 960px) {
+    .nav-inner { gap: 10px; }
+    .brand { order: 1; flex: 1; }
+    .menu-btn { display: inline-flex; order: 3; }
+    .nav-controls { order: 2; gap: 8px; }
+    .nav-links {
+      order: 4;
+      display: none;
+      flex-basis: 100%;
+      flex-direction: column;
+      gap: 0;
+      padding: 6px 0 10px;
+      font-size: 17px;
+    }
+    .nav-links.open { display: flex; }
+    .nav-link { padding: 12px 4px; border-top: 1px solid var(--line); }
+    .nav-link.active { border-bottom: 0; }
+  }
+  @media (max-width: 420px) {
+    .brand { font-size: 13px; }
+    :root[data-mode='paper'] .brand { font-size: 17px; }
+    .lang span { display: none; }
   }
 </style>
