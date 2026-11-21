@@ -8,9 +8,9 @@ const t = useT(lang);
 const links = [
   { key: 'projects', href: `/${lang}/#projects`, label: t.nav.projects },
   { key: 'biomedical', href: `/${lang}/#biomedical`, label: t.nav.biomedical },
-  { key: 'math', href: `/${lang}/#math`, label: t.nav.math },
+  { key: 'math', href: `/${lang}/#math`, label: t.nav.math, term: (t.nav as any).mathTerm },
   { key: 'talks', href: `/${lang}/#talks`, label: t.nav.talks },
-  { key: 'lab', href: `/${lang}/lab/`, label: t.nav.lab },
+  { key: 'lab', href: `/${lang}/lab/`, label: t.nav.lab, term: (t.nav as any).labTerm },
   { key: 'writing', href: `/${lang}/writing/`, label: t.nav.writing },
   { key: 'chess', href: `/${lang}/chess/`, label: t.nav.chess },
   { key: 'cv', href: '/cv.pdf', label: t.nav.cv },
@@ -28,7 +28,7 @@ const links = [
     <div class="nav-links" id="nav-links">
       {links.map((l) => (
         <a href={l.href} aria-current={current === l.key ? 'page' : undefined} class:list={['nav-link', { active: current === l.key }]}>
-          <span class="term-only">./</span>{l.label}
+          <span class="term-only">./</span>{l.term ? (<><span class="term-only">{l.term}</span><span class="paper-only">{l.label}</span></>) : l.label}
         </a>
       ))}
     </div>
@@ -75,7 +75,7 @@ const links = [
     backdrop-filter: blur(8px);
   }
   /* One row on desktop: brand · links (centred in the free space) · controls.
-     Below 1340px the links move into the menu, so nothing ever wraps. */
+     Below 1400px the links move into the menu, so nothing ever wraps. */
   .nav-inner {
     display: flex;
     flex-wrap: nowrap;
@@ -98,7 +98,6 @@ const links = [
   .nav-links {
     display: flex;
     flex: 1 1 auto;
-    min-width: 0;
     flex-wrap: nowrap;
     justify-content: center;
     white-space: nowrap;
@@ -165,9 +164,9 @@ const links = [
   /* ---------- phones & small tablets ---------- */
   /* tighter desktops: drop the ./ prefix so the Spanish row still fits */
   @media (max-width: 1500px) {
-    .nav-link .term-only { display: none; }
+    .nav-link > .term-only:first-child { display: none; }
   }
-  @media (max-width: 1340px) {
+  @media (max-width: 1400px) {
     .nav-inner { gap: 10px; flex-wrap: wrap; }
     .brand { order: 1; flex: 1; }
     .menu-btn { display: inline-flex; order: 3; }
