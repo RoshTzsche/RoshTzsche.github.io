@@ -82,6 +82,16 @@ const games = (await postsIn(lang)).filter((p) => p.data.shelf === 'chess');
     <p class="kicker">{c.kicker}</p>
     <h1>{c.title}</h1>
     <p class="sub">{c.sub(lichess.games)}</p>
+    <div class="play" aria-labelledby="play-h">
+      <div class="play-text">
+        <h2 id="play-h" class="play-title"><img src="/pieces/merida/wN.svg" alt="" width="40" height="40" />{c.playMe}</h2>
+        <p class="play-sub">{c.playSub}</p>
+      </div>
+      <div class="play-btns">
+        <a class="btn btn-primary big-btn" href={`https://lichess.org/?user=${LICHESS_USER}#friend`} target="_blank" rel="noopener">{c.onLichess} →</a>
+        <a class="btn big-btn" href={`https://www.chess.com/play/${CHESSCOM_USER}`} target="_blank" rel="noopener">{c.onChesscom} →</a>
+      </div>
+    </div>
   </section>
 
   <section class="wrap ratings" aria-label="Ratings">
@@ -143,6 +153,14 @@ const games = (await postsIn(lang)).filter((p) => p.data.shelf === 'chess');
   .head { padding-block: 72px 40px; display: flex; flex-direction: column; gap: 16px; }
   h1 { margin: 0; font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px); line-height: 1.08; font-weight: 500; }
   .sub { margin: 0; font-size: 21px; line-height: 1.55; color: var(--fg-2); max-width: 720px; }
+  .play { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 40px; padding: clamp(20px, 3vw, 32px); border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); }
+  .play-text { display: flex; flex-direction: column; gap: 6px; }
+  .play-title { margin: 0; display: flex; align-items: center; gap: 14px; font-family: var(--font-display); font-size: clamp(28px, 3vw, 40px); line-height: 1.1; }
+  .play-title img { width: 1.15em; height: 1.15em; }
+  .play-sub { margin: 0; color: var(--muted); font-size: 16px; }
+  .play-btns { display: flex; flex-wrap: wrap; gap: 12px; }
+  .big-btn { min-height: 56px; padding: 0 26px; font-size: 16px; }
+  @media (max-width: 560px) { .play-btns, .big-btn { width: 100%; justify-content: center; } }
   /* one card per row, full width; the four time controls spread across it */
   .ratings { display: flex; flex-direction: column; gap: 20px; padding-bottom: 56px; }
   .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }

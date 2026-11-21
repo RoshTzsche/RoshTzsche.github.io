@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Attractor from '../components/Attractor.astro';
 import EEG from '../components/EEG.astro';
-import ProjectCard from '../components/ProjectCard.astro';
+import ProjectRow from '../components/ProjectRow.astro';
 import { featured, lab, distinctions, competitions } from '../data/projects';
 import { useT, otherLang, type Lang } from '../i18n/ui';
 import { postsIn, postUrl } from '../lib/posts';
@@ -21,6 +21,8 @@ const profile = {
   dateModified: new Date().toISOString(),
   mainEntity: person,
 };
+// Award-winning projects first, then the rest
+const ordered = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.award)];
 ---
 <Base lang={lang} defaultMode="terminal" altPath={`/${otherLang(lang)}/`} canonicalPath={`/${lang}/`} rootRedirect={root} fullTitle={lang === 'es' ? 'Rosh Guadiana Páez — Ingeniería Biomédica · UDLAP' : 'Rosh Guadiana Páez — Biomedical Engineering · UDLAP'}>
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(profile)} />
@@ -63,13 +65,8 @@ const profile = {
       <h2 class="section-title"><span class="prefix">~/</span>{t.home.projectsTitle}</h2>
       <a class="mono muted" href="https://github.com/RoshTzsche?tab=repositories">{t.home.allRepos}</a>
     </div>
-    <p class="kicker accent">★ {t.home.awarded}</p>
-    <div class="grid-cards awarded-grid">
-      {featured.filter((p) => p.award).map((p) => <ProjectCard p={p} lang={lang} big />)}
-    </div>
-    <p class="kicker">{t.home.moreProjects}</p>
-    <div class="grid-cards">
-      {featured.filter((p) => !p.award).map((p) => <ProjectCard p={p} lang={lang} />)}
+    <div class="rows">
+      {ordered.map((p, i) => <ProjectRow p={p} lang={lang} n={i + 1} />)}
     </div>
   </section>
 
@@ -79,8 +76,8 @@ const profile = {
       <h2 class="section-title"><span class="prefix">~/</span>{t.home.labTitle}</h2>
       <p class="muted sub">{t.home.labSub}</p>
     </div>
-    <div class="grid-cards">
-      {lab.map((p) => <ProjectCard p={p} lang={lang} />)}
+    <div class="rows lab-rows">
+      {lab.map((p, i) => <ProjectRow p={p} lang={lang} n={i + 1} compact />)}
     </div>
   </section>
 
@@ -170,7 +167,10 @@ const profile = {
   .block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; }
   .block-head.col { flex-direction: column; align-items: flex-start; gap: 8px; }
   .block-head a { font-size: 14px; }
-  .awarded-grid { grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); }
+  .rows { display: flex; flex-direction: column; }
+  .lab-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); column-gap: clamp(24px, 4vw, 64px); }
+  .lab-rows > :global(.row:last-child) { border-bottom: 0; }
+  .lab-rows { border-bottom: 1px solid var(--line); }
   .sub { margin: 0; font-size: 16px; }
   .split { flex-direction: row; flex-wrap: wrap; gap: 20px; }
   .grow { flex: 999 1 520px; min-width: 0; padding: clamp(20px, 3vw, 28px); }

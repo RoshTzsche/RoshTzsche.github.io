@@ -5,7 +5,7 @@ import { useT, type Lang } from '../i18n/ui';
 interface Props { lang: Lang }
 const r = useT(Astro.props.lang).writing.reader;
 const groups = [
-  { key: 'width', label: r.width, options: [['narrow', r.narrow], ['medium', r.medium], ['wide', r.wide]] },
+  { key: 'width', label: r.width, options: [['narrow', r.narrow], ['medium', r.medium], ['wide', r.wide], ['full', r.full]] },
   { key: 'align', label: r.align, options: [['left', r.left], ['justify', r.justify], ['center', r.center]] },
   { key: 'font', label: r.font, options: [['serif', r.serif], ['sans', r.sans], ['mono', r.mono]] },
   { key: 'images', label: r.images, options: [['show', r.show], ['hide', r.hide]] },

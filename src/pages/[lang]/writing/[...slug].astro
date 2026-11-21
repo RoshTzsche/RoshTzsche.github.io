@@ -57,7 +57,7 @@ const d = post.data;
 </Base>
 
 <style>
-  .post-shell { padding-block: 28px 0; display: flex; flex-direction: column; gap: 36px; }
+  .post-shell { max-width: none; padding-block: 28px 0; display: flex; flex-direction: column; gap: 36px; }
 
   /* ---------- reader column (settings come from ReaderControls) ---------- */
   .reader {
@@ -72,9 +72,10 @@ const d = post.data;
     gap: 26px;
     font-family: var(--r-font);
   }
-  .reader[data-width='narrow'] { --r-width: 56ch; }
-  .reader[data-width='medium'] { --r-width: 70ch; }
-  .reader[data-width='wide'] { --r-width: 96ch; }
+  .reader[data-width='narrow'] { --r-width: 520px; }
+  .reader[data-width='medium'] { --r-width: 760px; }
+  .reader[data-width='wide'] { --r-width: 1100px; }
+  .reader[data-width='full'] { --r-width: 100%; }
   .reader[data-font='serif'] { --r-font: Newsreader, Georgia, serif; }
   .reader[data-font='sans'] { --r-font: Inter, system-ui, sans-serif; }
   .reader[data-font='mono'] { --r-font: 'JetBrains Mono', ui-monospace, monospace; }

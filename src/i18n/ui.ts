@@ -88,7 +88,7 @@ export const ui = {
       draft: 'BORRADOR',
       reader: {
         label: 'Opciones de lectura', size: 'Tamaño', smaller: 'Texto más pequeño', larger: 'Texto más grande',
-        width: 'Ancho', narrow: 'Estrecho', medium: 'Medio', wide: 'Amplio',
+        width: 'Ancho', narrow: 'Estrecho', medium: 'Medio', wide: 'Amplio', full: 'Completo',
         align: 'Alineación', left: 'Izquierda', justify: 'Justificado', center: 'Centrado',
         font: 'Letra', serif: 'Serif', sans: 'Sans', mono: 'Mono',
         images: 'Imágenes', show: 'Mostrar', hide: 'Ocultar', reset: 'Restablecer',
@@ -100,6 +100,10 @@ export const ui = {
       sub: (games: number) =>
         `${games.toLocaleString('es-MX')} partidas en Lichess desde mayo de 2023. Un repertorio de ataque: estructuras tensas y desequilibradas con negras; juego abierto y desarrollo rápido con blancas.`,
       ratingsNote: 'Ratings actualizados a diario desde las APIs públicas de Lichess y Chess.com.',
+      playMe: 'Juega conmigo',
+      playSub: 'Elige dónde: el enlace abre directamente un reto contra mí.',
+      onLichess: 'Retar en Lichess',
+      onChesscom: 'Retar en Chess.com',
       rapid: 'Rápidas',
       blitz: 'Blitz',
       bullet: 'Bullet',
@@ -201,7 +205,7 @@ export const ui = {
       draft: 'DRAFT',
       reader: {
         label: 'Reading options', size: 'Size', smaller: 'Smaller text', larger: 'Larger text',
-        width: 'Width', narrow: 'Narrow', medium: 'Medium', wide: 'Wide',
+        width: 'Width', narrow: 'Narrow', medium: 'Medium', wide: 'Wide', full: 'Full',
         align: 'Alignment', left: 'Left', justify: 'Justified', center: 'Centred',
         font: 'Font', serif: 'Serif', sans: 'Sans', mono: 'Mono',
         images: 'Images', show: 'Show', hide: 'Hide', reset: 'Reset',
@@ -213,6 +217,10 @@ export const ui = {
       sub: (games: number) =>
         `${games.toLocaleString('en-US')} games on Lichess since May 2023. An attacking repertoire: sharp, unbalanced structures with Black; open, fast development with White.`,
       ratingsNote: 'Ratings refreshed daily from the public Lichess and Chess.com APIs.',
+      playMe: 'Play me',
+      playSub: 'Pick a site: the link opens a challenge against me directly.',
+      onLichess: 'Challenge me on Lichess',
+      onChesscom: 'Challenge me on Chess.com',
       rapid: 'Rapid',
       blitz: 'Blitz',
       bullet: 'Bullet',
