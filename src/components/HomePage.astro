@@ -8,7 +8,7 @@ import { useT, otherLang, type Lang } from '../i18n/ui';
 import { postsIn, postUrl } from '../lib/posts';
 import { tex } from '../lib/tex';
 import { person } from '../data/person';
-import { talks, kinds } from '../data/talks';
+import { items as tlItems, kinds, whenLabel } from '../data/talks';
 
 interface Props { lang: Lang; root?: boolean }
 const { lang, root = false } = Astro.props;
@@ -24,10 +24,11 @@ const profile = {
 };
 // Award-winning projects first, then the rest of the featured, then the lab
 const all = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.award), ...lab];
-const years = [...new Set(talks.filter((x) => x.year).map((x) => x.year as number))].sort((a, b) => b - a);
+const dated = tlItems.filter((x) => x.date).sort((a, b) => (a.date! < b.date! ? -1 : 1));
+const years = [...new Set(dated.map((x) => x.date!.slice(0, 4)))];
 const talkGroups = [
-  ...years.map((y) => ({ label: String(y), items: talks.filter((x) => x.year === y) })),
-  { label: t.home.talksMore, items: talks.filter((x) => x.year === null) },
+  ...years.map((y) => ({ label: y, items: dated.filter((x) => x.date!.startsWith(y)) })),
+  { label: t.home.talksMore, items: tlItems.filter((x) => !x.date) },
 ].filter((g) => g.items.length);
 ---
 <Base lang={lang} defaultMode="terminal" altPath={`/${otherLang(lang)}/`} canonicalPath={`/${lang}/`} rootRedirect={root} fullTitle={lang === 'es' ? 'Rosh Guadiana Páez — Ingeniería Biomédica · UDLAP' : 'Rosh Guadiana Páez — Biomedical Engineering · UDLAP'}>
@@ -141,9 +142,10 @@ const talkGroups = [
           <span class="tl-label mono">{g.label}</span>
           <ul class="tl-items">
             {g.items.map((x) => (
-              <li class="tl-item">
+              <li class:list={['tl-item', `k-${x.kind}`]}>
+                <span class="tl-when mono">{whenLabel(x, lang)}</span>
                 <span class="tl-kind mono">{kinds[x.kind][lang]}</span>
-                <span class="tl-title">{x.href ? <a href={x.href}>{x.title[lang]} <span aria-hidden="true">↗</span></a> : x.title[lang]}</span>
+                <span class="tl-title">{x.href ? <a href={x.href}>{x.title[lang]} <span class="tl-link mono">{x.hrefLabel ? x.hrefLabel[lang] : ''} ↗</span></a> : x.title[lang]}</span>
                 <span class="tl-where">{x.where[lang]}</span>
               </li>
             ))}
@@ -265,13 +267,18 @@ const talkGroups = [
   .tl-label { font-size: 22px; font-weight: 700; color: var(--fg); }
   :global(:root[data-mode='paper']) .tl-label { font-family: var(--font-display); font-weight: 500; font-size: 26px; }
   .tl-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-  .tl-item { display: grid; grid-template-columns: 110px minmax(0, 1.4fr) minmax(0, 1fr); gap: 4px 20px; align-items: baseline; }
+  .tl-item { display: grid; grid-template-columns: 84px 100px minmax(0, 1.4fr) minmax(0, 1fr); gap: 4px 20px; align-items: baseline; }
+  .tl-when { font-size: 12px; color: var(--fg-2); }
+  .tl-link { font-size: 11px; color: var(--muted); }
+  .k-award .tl-kind, .k-milestone .tl-kind { color: var(--accent); }
+  .k-award .tl-title, .k-milestone .tl-title { font-weight: 600; }
   .tl-kind { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
   .tl-title { font-size: 17px; color: var(--fg); }
   .tl-title a:hover { color: var(--accent); }
   .tl-where { font-size: 15px; color: var(--muted); }
   @media (max-width: 760px) {
     .tl-year { grid-template-columns: 1fr; gap: 12px; }
-    .tl-item { grid-template-columns: 1fr; }
+    .tl-item { grid-template-columns: 84px minmax(0, 1fr); }
+    .tl-title, .tl-where { grid-column: 1 / -1; }
   }
 </style>
