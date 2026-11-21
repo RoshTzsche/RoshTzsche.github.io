@@ -198,10 +198,11 @@ const talkGroups = [
   .hero-bg:hover { opacity: 0.8; }
   .hero-bg-hint { position: absolute; left: 64%; bottom: 12%; transform: translateX(-50%); font-size: 13px; color: var(--accent); opacity: 0; transition: opacity 0.3s ease; }
   .hero-bg:hover .hero-bg-hint, .hero-bg:focus-visible .hero-bg-hint { opacity: 1; }
-  /* clicks on empty hero space reach the attractor link; text and buttons stay clickable */
+  /* Empty hero space reaches the attractor link (opens the lab).
+     The text itself and the EEG column catch the pointer, so text can be selected. */
   .hero-grid { pointer-events: none; }
-  /* only real controls catch clicks; everything else (including empty space next to the text) opens the lab */
-  .hero-text a, .hero-text button, .hero-eeg a { pointer-events: auto; }
+  .hero-text > *, .hero-eeg { pointer-events: auto; cursor: auto; user-select: text; }
+  .hero-text h1, .hero-text .prompt, .hero-text .tagline, .hero-text .bio, .hero-text .fig-note { width: fit-content; max-width: 100%; }
   .hero-grid { position: relative; z-index: 1; width: 100%; padding-block: clamp(48px, 8vh, 120px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: clamp(32px, 5vw, 80px); }
   .hero-text { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: clamp(16px, 2.4vh, 28px); }
   .hero-eeg { flex: 1 1 300px; max-width: clamp(300px, 26vw, 420px); min-width: 0; }
