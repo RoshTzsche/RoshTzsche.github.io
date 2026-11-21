@@ -25,6 +25,8 @@ const t = useT(Astro.props.lang);
     background: var(--surface-2);
     border: 1px solid var(--line-strong);
     transition: box-shadow 0.3s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .mode-switch button {
     display: inline-flex;
@@ -39,6 +41,8 @@ const t = useT(Astro.props.lang);
     font-family: var(--font-mono);
     font-size: 14px;
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .mode-switch .paper-btn {
     font-family: Newsreader, Georgia, serif;
