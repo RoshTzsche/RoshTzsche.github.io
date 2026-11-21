@@ -1,0 +1,42 @@
+# Pages CMS (https://app.pagescms.org): web editor for the posts.
+# Sign in with GitHub, pick this repo, and this config defines the forms.
+media:
+  input: public/media
+  output: /media
+
+content:
+  - name: escritos
+    label: Escritos (español)
+    type: collection
+    path: src/content/writing/es
+    filename: "{primary}.md"
+    view:
+      fields: [title, date, shelf, draft]
+      primary: title
+      sort: [date]
+    fields: &postFields
+      - { name: title, label: Título, type: string, required: true }
+      - { name: date, label: Fecha, type: date, required: true }
+      - name: shelf
+        label: Estante
+        type: select
+        default: science
+        options: { values: [science, chess, personal] }
+      - { name: tags, label: Etiquetas, type: string, list: true }
+      - { name: summary, label: Resumen (1–2 frases), type: text, required: true }
+      - { name: draft, label: Borrador (no se publica), type: boolean, default: true }
+      - { name: pgn, label: "PGN (solo partidas de ajedrez)", type: text }
+      # Raw Markdown editor: keeps LaTeX ($...$, $$...$$) intact.
+      # Upload images with the media manager and paste their /media/... path.
+      - { name: body, label: Texto (Markdown + LaTeX), type: code, options: { language: markdown } }
+
+  - name: writing
+    label: Writing (English)
+    type: collection
+    path: src/content/writing/en
+    filename: "{primary}.md"
+    view:
+      fields: [title, date, shelf, draft]
+      primary: title
+      sort: [date]
+    fields: *postFields

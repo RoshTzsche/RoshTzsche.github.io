@@ -13,6 +13,12 @@ npm run build      # genera dist/ como en producción
 
 ## Escribir una entrada
 
+**Rápido (terminal):** `npm run new -- "Mi título"` crea la entrada como borrador, la carpeta `public/media/<slug>/` para sus imágenes y la abre en nvim. Opciones: `--shelf chess|personal`, `--lang en`.
+
+**Desde el navegador o el celular:** entra a [app.pagescms.org](https://app.pagescms.org) con tu cuenta de GitHub y elige este repo; `.pages.yml` define los formularios. Las imágenes se suben con su gestor de medios a `public/media/`.
+
+**A mano:**
+
 1. Crea `src/content/writing/es/mi-entrada.md` (en inglés: `.../en/mi-entrada.md`).
 2. Cabecera:
 
