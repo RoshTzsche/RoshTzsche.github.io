@@ -20,18 +20,29 @@ const { label, aspect = '1 / 1', animate = true, bare = false } = Astro.props;
     return xs;
   }
 
-  // Embed with delay tau, centre, and change to axes that separate the
-  // structure from the diagonal x_i ≈ x_{i-τ} ≈ x_{i-2τ}.
+  // Embed with delay tau, centre, and project on the principal axes (PCA):
+  // at angle 0 the view shows the "butterfly" fully open (maximum spread).
   function embed(xs: number[], tau = 9) {
     const pts: [number, number, number][] = [];
     for (let i = 2 * tau; i < xs.length; i++) pts.push([xs[i], xs[i - tau], xs[i - 2 * tau]]);
-    const m = [0, 0, 0];
+    const n = pts.length, m = [0, 0, 0];
     for (const p of pts) { m[0] += p[0]; m[1] += p[1]; m[2] += p[2]; }
-    m[0] /= pts.length; m[1] /= pts.length; m[2] /= pts.length;
-    return pts.map(([a, b, c]) => {
-      a -= m[0]; b -= m[1]; c -= m[2];
-      return [a - b, a + b - 2 * c, a + b + c] as [number, number, number]; // u, v, w
-    });
+    m[0] /= n; m[1] /= n; m[2] /= n;
+    const q = pts.map((p) => [p[0] - m[0], p[1] - m[1], p[2] - m[2]]);
+    const C = [0, 1, 2].map((i) => [0, 1, 2].map((j) => q.reduce((s, a) => s + a[i] * a[j], 0) / n));
+    const power = (orth: number[][]) => {
+      let v = [1, 0.3, 0.2];
+      for (let it = 0; it < 200; it++) {
+        let w = [0, 1, 2].map((i) => C[i][0] * v[0] + C[i][1] * v[1] + C[i][2] * v[2]);
+        for (const o of orth) { const d = w[0] * o[0] + w[1] * o[1] + w[2] * o[2]; w = w.map((x, k) => x - d * o[k]); }
+        const nn = Math.hypot(w[0], w[1], w[2]) || 1; v = w.map((x) => x / nn);
+      }
+      return v;
+    };
+    const e1 = power([]), e2 = power([e1]), e3 = power([e1, e2]);
+    const proj = q.map((a) => [e1, e2, e3].map((e) => a[0] * e[0] + a[1] * e[1] + a[2] * e[2]) as [number, number, number]);
+    const r = Math.max(...proj.map((p) => Math.abs(p[0])));
+    return proj.map((p) => p.map((x) => x / r) as [number, number, number]); // a ∈ [-1, 1]
   }
 
   const UVW = embed(lorenzX());
@@ -39,7 +50,7 @@ const { label, aspect = '1 / 1', animate = true, bare = false } = Astro.props;
 
   document.querySelectorAll<HTMLCanvasElement>('canvas.attractor').forEach((canvas) => {
     const ctx = canvas.getContext('2d')!;
-    let angle = 0.6, visible = true, color = '';
+    let angle = 0, visible = true, color = '';
     const readColor = () => { color = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); };
     readColor();
     window.addEventListener('modechange', () => { readColor(); draw(); });
@@ -55,21 +66,18 @@ const { label, aspect = '1 / 1', animate = true, bare = false } = Astro.props;
     function draw() {
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-      // Bare (background) mode: on wide screens sit right of centre, filling the height;
-      // on tall/phone screens centre it and fit the width.
+      // a: widest axis, b: second axis, c: depth. Rotation is around the vertical axis.
       const bare = canvas.dataset.bare === '1';
       const wide = W / H > 1.15;
       const cx = bare && wide ? W * 0.64 : W / 2;
       const cy = bare && !wide ? H * 0.42 : H / 2;
-      const k = bare ? (wide ? Math.min(W * 0.62, H * 1.05) : Math.min(W * 1.1, H * 0.8)) / 40 : Math.min(W, H) / 40;
-      const ca = Math.cos(angle), sa = Math.sin(angle), tilt = 0.55, ct = Math.cos(tilt), st = Math.sin(tilt);
+      const k = bare ? (wide ? Math.min(W * 0.34, H * 0.8) : W * 0.46) : Math.min(W, H) * 0.46;
+      const ca = Math.cos(angle), sa = Math.sin(angle);
       ctx.beginPath();
       for (let i = 0; i < UVW.length; i++) {
-        const [u, v, w] = UVW[i];
-        const X = u * ca + w * 0.35 * sa;
-        const Z = -u * sa + w * 0.35 * ca;
-        const Y = v * 0.62 * ct - Z * st;
-        const px = cx + X * k, py = cy + Y * k;
+        const [a, b, c] = UVW[i];
+        const X = a * ca + c * sa;
+        const px = cx + X * k, py = cy - b * k;
         if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
       }
       ctx.strokeStyle = color;
@@ -84,7 +92,7 @@ const { label, aspect = '1 / 1', animate = true, bare = false } = Astro.props;
 
     if (canvas.dataset.animate === '1' && !reduce) {
       const loop = () => {
-        if (visible && !document.hidden) { angle += 0.004; draw(); }
+        if (visible && !document.hidden) { angle += 0.003; draw(); }
         requestAnimationFrame(loop);
       };
       requestAnimationFrame(loop);

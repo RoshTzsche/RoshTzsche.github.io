@@ -86,7 +86,8 @@ const presets = [
   const caption = document.querySelector<HTMLElement>('[data-qr-caption]')!;
   let style: Style = 'terminal';
 
-  // Takens reconstruction of a Lorenz signal, normalised to [-1, 1]
+  // Takens reconstruction of a Lorenz signal, projected on its two principal
+  // axes (PCA): the most open "butterfly" view. Normalised so max |x| = 1.
   const attractor = (() => {
     let x = 1, y = 1, z = 1; const xs: number[] = [];
     for (let i = 0; i < 9000; i++) {
@@ -94,18 +95,23 @@ const presets = [
       x += dx * 0.006; y += dy * 0.006; z += dz * 0.006;
       if (i > 600 && i % 2 === 0) xs.push(x);
     }
-    const tau = 9, pts: [number, number][] = [];
-    let m = [0, 0, 0];
-    for (let i = 2 * tau; i < xs.length; i++) { m[0] += xs[i]; m[1] += xs[i - tau]; m[2] += xs[i - 2 * tau]; }
-    m = m.map((v) => v / (xs.length - 2 * tau));
-    const ca = Math.cos(0.6), sa = Math.sin(0.6), ct = Math.cos(0.55), st = Math.sin(0.55);
-    let r = 0;
-    for (let i = 2 * tau; i < xs.length; i++) {
-      const a = xs[i] - m[0], b = xs[i - tau] - m[1], c = xs[i - 2 * tau] - m[2];
-      const u = a - b, v = a + b - 2 * c, w = a + b + c;
-      const X = u * ca + w * 0.35 * sa, Z = -u * sa + w * 0.35 * ca, Y = v * 0.62 * ct - Z * st;
-      pts.push([X, Y]); r = Math.max(r, Math.abs(X), Math.abs(Y));
-    }
+    const tau = 9, q: number[][] = [];
+    for (let i = 2 * tau; i < xs.length; i++) q.push([xs[i], xs[i - tau], xs[i - 2 * tau]]);
+    const n = q.length, m = [0, 1, 2].map((k) => q.reduce((s, p) => s + p[k], 0) / n);
+    q.forEach((p) => { p[0] -= m[0]; p[1] -= m[1]; p[2] -= m[2]; });
+    const C = [0, 1, 2].map((i) => [0, 1, 2].map((j) => q.reduce((s, a) => s + a[i] * a[j], 0) / n));
+    const power = (orth: number[][]) => {
+      let v = [1, 0.3, 0.2];
+      for (let it = 0; it < 200; it++) {
+        let w = [0, 1, 2].map((i) => C[i][0] * v[0] + C[i][1] * v[1] + C[i][2] * v[2]);
+        for (const o of orth) { const d = w[0] * o[0] + w[1] * o[1] + w[2] * o[2]; w = w.map((t, k) => t - d * o[k]); }
+        const nn = Math.hypot(w[0], w[1], w[2]) || 1; v = w.map((t) => t / nn);
+      }
+      return v;
+    };
+    const e1 = power([]), e2 = power([e1]);
+    const pts = q.map((a) => [a[0] * e1[0] + a[1] * e1[1] + a[2] * e1[2], a[0] * e2[0] + a[1] * e2[1] + a[2] * e2[2]] as [number, number]);
+    const r = Math.max(...pts.map((p) => Math.abs(p[0])));
     return pts.map(([X, Y]) => [X / r, Y / r] as [number, number]);
   })();
 
@@ -144,7 +150,7 @@ const presets = [
     }
     // centre: Takens attractor + prompt
     const cx = off + (w0 + win / 2) * cell, cy = off + (w0 + win / 2) * cell, half = (win / 2) * cell * 0.9;
-    draw.path(attractor.map(([X, Y]) => [cx + X * half, cy - half * 0.12 + Y * half * 0.78] as [number, number]), P.accent, Math.max(1, cell * 0.08));
+    draw.path(attractor.map(([X, Y]) => [cx + X * half, cy - half * 0.15 - Y * half] as [number, number]), P.accent, Math.max(1, cell * 0.08));
     draw.text('~ ❯ rosh', cx, cy + half * 0.95, cell * 0.9, P.muted);
   }
 
