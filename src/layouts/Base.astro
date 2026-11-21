@@ -14,11 +14,13 @@ interface Props {
   defaultMode?: 'terminal' | 'paper';
   current?: string;
   altPath?: string; // same page in the other language
+  fullTitle?: string; // overrides the whole <title>
+  ogType?: string;
 }
 
-const { lang, title, description, defaultMode = 'terminal', current = '', altPath } = Astro.props;
+const { lang, title, description, defaultMode = 'terminal', current = '', altPath, ogType = 'website' } = Astro.props;
 const t = useT(lang);
-const fullTitle = title ? `${title} — Rosh Guadiana Páez` : 'Rosh Guadiana Páez';
+const fullTitle = Astro.props.fullTitle ?? (title ? `${title} — Rosh Guadiana Páez` : 'Rosh Guadiana Páez');
 const desc = description ?? t.meta.description;
 const other = otherLang(lang);
 const alt = altPath ?? `/${other}/`;
@@ -34,11 +36,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <title>{fullTitle}</title>
   <meta name="description" content={desc} />
   <link rel="canonical" href={canonical} />
+  <link rel="alternate" hreflang={lang} href={canonical} />
   <link rel="alternate" hreflang={other} href={new URL(alt, Astro.site)} />
+  <link rel="alternate" hreflang="x-default" href={new URL(`/en/${Astro.url.pathname.replace(/^\/(es|en)\//, '')}`, Astro.site)} />
+  <link rel="sitemap" href="/sitemap.xml" />
+  <meta name="author" content="Rosh Guadiana Páez" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <meta property="og:title" content={fullTitle} />
   <meta property="og:description" content={desc} />
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content={ogType} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:site_name" content="Rosh Guadiana Páez" />
+  <meta name="twitter:card" content="summary" />
   <meta property="og:locale" content={lang === 'es' ? 'es_MX' : 'en_US'} />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -54,6 +63,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       if (m === 'terminal' || m === 'paper') document.documentElement.dataset.mode = m;
     })();
   </script>
+  <slot name="head" />
 </head>
 <body>
   <a class="skip" href="#main">{lang === 'es' ? 'Saltar al contenido' : 'Skip to content'}</a>

@@ -7,13 +7,15 @@ import { featured, lab, distinctions, competitions } from '../../data/projects';
 import { useT, getStaticLangPaths, otherLang, type Lang } from '../../i18n/ui';
 import { postsIn, postUrl } from '../../lib/posts';
 import { tex } from '../../lib/tex';
+import { person } from '../../data/person';
 
 export const getStaticPaths = getStaticLangPaths;
 const lang = Astro.params.lang as Lang;
 const t = useT(lang);
 const latest = (await postsIn(lang))[0];
 ---
-<Base lang={lang} defaultMode="terminal" altPath={`/${otherLang(lang)}/`}>
+<Base lang={lang} defaultMode="terminal" altPath={`/${otherLang(lang)}/`} fullTitle={lang === 'es' ? 'Rosh Guadiana Páez — Ingeniería Biomédica · UDLAP' : 'Rosh Guadiana Páez — Biomedical Engineering · UDLAP'}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(person)} />
   <!-- HERO: attractor behind the text, compact EEG on the right -->
   <section class="hero">
     <div class="hero-bg" aria-hidden="true">

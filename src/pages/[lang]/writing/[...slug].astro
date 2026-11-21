@@ -6,6 +6,7 @@ import PgnViewer from '../../../components/PgnViewer.astro';
 import { useT, otherLang, type Lang } from '../../../i18n/ui';
 import { allPosts, langOf, slugOf, formatDate, readingMinutes, type Post } from '../../../lib/posts';
 import { tex } from '../../../lib/tex';
+import { person } from '../../../data/person';
 
 export async function getStaticPaths() {
   const posts = await allPosts();
@@ -25,7 +26,12 @@ const altPath = hasTwin ? `/${other}/writing/${slugOf(post)}/` : `/${other}/writ
 const { Content } = await render(post);
 const d = post.data;
 ---
-<Base lang={lang} title={d.title} description={d.summary} defaultMode="paper" current="writing" altPath={altPath}>
+<Base lang={lang} title={d.title} description={d.summary} defaultMode="paper" current="writing" altPath={altPath} ogType="article">
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'BlogPosting', headline: d.title, description: d.summary,
+    datePublished: d.date.toISOString(), inLanguage: lang, keywords: d.tags.join(', '),
+    author: { '@id': person['@id'], '@type': 'Person', name: person.name, url: person.url },
+  })} />
   <article class="wrap post">
     <a class="back mono" href={`/${lang}/writing/`}>{t.writing.back}</a>
     <header>
