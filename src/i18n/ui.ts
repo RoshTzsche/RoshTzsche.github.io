@@ -108,6 +108,7 @@ export const ui = {
         align: 'Alineación', left: 'Izquierda', justify: 'Justificado', center: 'Centrado',
         font: 'Letra', serif: 'Serif', sans: 'Sans', mono: 'Mono',
         images: 'Imágenes', show: 'Mostrar', hide: 'Ocultar', reset: 'Restablecer',
+        open: 'Aa  ajustes de lectura', close: 'Ocultar ajustes',
       },
     },
     chess: {
@@ -241,6 +242,7 @@ export const ui = {
         align: 'Alignment', left: 'Left', justify: 'Justified', center: 'Centred',
         font: 'Font', serif: 'Serif', sans: 'Sans', mono: 'Mono',
         images: 'Images', show: 'Show', hide: 'Hide', reset: 'Reset',
+        open: 'Aa  reading settings', close: 'Hide settings',
       },
     },
     chess: {

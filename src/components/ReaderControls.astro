@@ -11,7 +11,10 @@ const groups = [
   { key: 'images', label: r.images, options: [['show', r.show], ['hide', r.hide]] },
 ];
 ---
-<div class="reader-bar" role="toolbar" aria-label={r.label}>
+<div class="reader-wrap" data-open="false">
+<button type="button" class="reader-toggle mono" data-toggle aria-expanded="false" aria-controls="reader-bar"
+  data-open-label={r.open} data-close-label={r.close}>{r.open}</button>
+<div class="reader-bar" id="reader-bar" role="toolbar" aria-label={r.label} hidden>
   <div class="grp" role="group" aria-label={r.size}>
     <span class="lbl mono">{r.size}</span>
     <button type="button" data-size="-1" aria-label={r.smaller}>A<span aria-hidden="true">−</span></button>
@@ -27,6 +30,8 @@ const groups = [
     </div>
   ))}
   <button type="button" class="reset mono" data-reset>{r.reset}</button>
+  <button type="button" class="close mono" data-close aria-label={r.close}>✕</button>
+</div>
 </div>
 
 <script>
@@ -66,13 +71,54 @@ const groups = [
   );
   bar?.querySelector('[data-reset]')?.addEventListener('click', () => { prefs = { ...DEF }; apply(); });
   apply();
+
+  // Show / hide the toolbar; the choice is remembered (closed by default).
+  const wrap = document.querySelector<HTMLElement>('.reader-wrap');
+  const toggle = wrap?.querySelector<HTMLButtonElement>('[data-toggle]');
+  const setOpen = (open: boolean) => {
+    if (!wrap || !bar || !toggle) return;
+    wrap.dataset.open = String(open);
+    bar.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.textContent = open ? toggle.dataset.closeLabel! : toggle.dataset.openLabel!;
+    try { localStorage.setItem('reader-open', open ? '1' : '0'); } catch {}
+  };
+  let open = false;
+  try { open = localStorage.getItem('reader-open') === '1'; } catch {}
+  setOpen(open);
+  toggle?.addEventListener('click', () => setOpen(wrap!.dataset.open !== 'true'));
+  bar?.querySelector('[data-close]')?.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && wrap?.dataset.open === 'true') setOpen(false);
+  });
 </script>
 
 <style>
-  .reader-bar {
+  .reader-wrap {
     position: sticky;
     top: calc(var(--nav-h, 72px) + 8px);
     z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .reader-toggle {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .reader-toggle:hover { color: var(--fg); }
+  .reader-wrap[data-open='true'] .reader-toggle { display: none; }
+  .reader-bar[hidden] { display: none; }
+  .close { color: var(--muted); border-color: transparent; }
+  .close:hover { color: var(--fg); border-color: var(--line-strong); }
+  .reader-bar {
+    align-self: stretch;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -104,7 +150,8 @@ const groups = [
   output { min-width: 44px; text-align: center; font-size: 12px; color: var(--muted); }
   .reset { font-size: 12px; color: var(--muted); border-style: dashed; }
   @media (max-width: 720px) {
-    .reader-bar { position: static; justify-content: flex-start; box-shadow: none; }
+    .reader-wrap { position: static; }
+    .reader-bar { justify-content: flex-start; box-shadow: none; }
     .lbl { display: none; }
   }
 </style>
