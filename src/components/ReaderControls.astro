@@ -1,0 +1,110 @@
+---
+// Reader-view toolbar (like a "web reader" extension): text size, column width,
+// alignment, font and images. Settings are saved in the browser and apply to every post.
+import { useT, type Lang } from '../i18n/ui';
+interface Props { lang: Lang }
+const r = useT(Astro.props.lang).writing.reader;
+const groups = [
+  { key: 'width', label: r.width, options: [['narrow', r.narrow], ['medium', r.medium], ['wide', r.wide]] },
+  { key: 'align', label: r.align, options: [['left', r.left], ['justify', r.justify], ['center', r.center]] },
+  { key: 'font', label: r.font, options: [['serif', r.serif], ['sans', r.sans], ['mono', r.mono]] },
+  { key: 'images', label: r.images, options: [['show', r.show], ['hide', r.hide]] },
+];
+---
+<div class="reader-bar" role="toolbar" aria-label={r.label}>
+  <div class="grp" role="group" aria-label={r.size}>
+    <span class="lbl mono">{r.size}</span>
+    <button type="button" data-size="-1" aria-label={r.smaller}>A<span aria-hidden="true">−</span></button>
+    <output class="mono" data-size-out>100%</output>
+    <button type="button" data-size="1" aria-label={r.larger} class="big">A<span aria-hidden="true">+</span></button>
+  </div>
+  {groups.map((g) => (
+    <div class="grp" role="group" aria-label={g.label}>
+      <span class="lbl mono">{g.label}</span>
+      {g.options.map(([value, label]) => (
+        <button type="button" data-set={g.key} data-value={value} aria-pressed="false">{label}</button>
+      ))}
+    </div>
+  ))}
+  <button type="button" class="reset mono" data-reset>{r.reset}</button>
+</div>
+
+<script>
+  type Prefs = { size: number; width: string; align: string; font: string; images: string };
+  const DEF: Prefs = { size: 0, width: 'medium', align: 'left', font: 'serif', images: 'show' };
+  const KEY = 'reader';
+  const target = document.querySelector<HTMLElement>('[data-reader]');
+  const bar = document.querySelector<HTMLElement>('.reader-bar');
+  let prefs: Prefs = { ...DEF };
+  try { prefs = { ...DEF, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch {}
+
+  const apply = () => {
+    if (!target || !bar) return;
+    target.style.setProperty('--r-scale', String(1 + prefs.size * 0.1));
+    target.dataset.width = prefs.width;
+    target.dataset.align = prefs.align;
+    target.dataset.font = prefs.font;
+    target.dataset.images = prefs.images;
+    bar.querySelector('[data-size-out]')!.textContent = Math.round((1 + prefs.size * 0.1) * 100) + '%';
+    bar.querySelectorAll<HTMLButtonElement>('[data-set]').forEach((b) =>
+      b.setAttribute('aria-pressed', String(prefs[b.dataset.set as keyof Prefs] === b.dataset.value))
+    );
+    try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {}
+  };
+
+  bar?.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((b) =>
+    b.addEventListener('click', () => {
+      prefs.size = Math.max(-3, Math.min(6, prefs.size + Number(b.dataset.size)));
+      apply();
+    })
+  );
+  bar?.querySelectorAll<HTMLButtonElement>('[data-set]').forEach((b) =>
+    b.addEventListener('click', () => {
+      (prefs as any)[b.dataset.set!] = b.dataset.value;
+      apply();
+    })
+  );
+  bar?.querySelector('[data-reset]')?.addEventListener('click', () => { prefs = { ...DEF }; apply(); });
+  apply();
+</script>
+
+<style>
+  .reader-bar {
+    position: sticky;
+    top: calc(var(--nav-h, 72px) + 8px);
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 18px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);
+  }
+  .grp { display: inline-flex; align-items: center; gap: 4px; }
+  .lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+  button {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.big { font-size: 18px; }
+  button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  output { min-width: 44px; text-align: center; font-size: 12px; color: var(--muted); }
+  .reset { font-size: 12px; color: var(--muted); border-style: dashed; }
+  @media (max-width: 720px) {
+    .reader-bar { position: static; justify-content: flex-start; box-shadow: none; }
+    .lbl { display: none; }
+  }
+</style>

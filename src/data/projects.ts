@@ -138,7 +138,7 @@ export const distinctions = [
   { href: '#p-mars_walker', tag: 'NASA SPACE APPS 2026', es: 'Mayor Innovación Tecnológica, Puebla', en: 'Greatest Technological Innovation, Puebla' },
   { href: '#p-gota_poblana', tag: 'HACKATÓN PUEBLA 2026', es: '2.º lugar — Gota Poblana', en: '2nd place — Gota Poblana' },
   { href: '#p-ojo_de_halcon', tag: 'ENACTUS 2025', es: '2.º lugar nacional, IA para impacto social', en: '2nd place national, AI for social impact' },
-  { href: '#math', tag: 'UDLAP', es: 'Beca del 100 % · Programa de Honores · Promedio 9.6', en: 'Full scholarship · Honors Program · GPA 9.6' },
+  { href: '#math', tag: 'UDLAP', es: 'Programa de Honores · Promedio 9.6 · Putnam 2026', en: 'Honors Program · GPA 9.6 · Putnam 2026' },
   { href: 'https://www.youtube.com/@stemudlap', tag: 'EQUIPO STEM UDLAP', es: 'Equipo representativo · host del podcast STEMpire', en: 'STEM Representative Team · STEMpire podcast host' },
 ];
 

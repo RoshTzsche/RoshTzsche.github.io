@@ -38,7 +38,7 @@ export const ui = {
     },
     home: {
       tagline: 'ingeniería biomédica · dinámica no lineal · neurociencia computacional',
-      bio: 'Estudiante de Ingeniería Biomédica en la UDLAP con beca del 100 %, miembro del Programa de Honores y del Equipo Representativo STEM. Trabajo donde las matemáticas se cruzan con la fisiología: reconstrucción del espacio de estados en EEG, instrumentación biomédica y software de investigación. De Durango, estudiando en Puebla.',
+      bio: 'Estudiante de Ingeniería Biomédica en la UDLAP, miembro del Programa de Honores y del Equipo Representativo STEM. Trabajo donde las matemáticas se cruzan con la fisiología: reconstrucción del espacio de estados en EEG, instrumentación biomédica y software de investigación. De Durango, estudiando en Puebla.',
       ctaProjects: 'ls ./proyectos',
       figCaption:
         '↳ al fondo: embedding de retardos $\\big[x(t),\\, x(t-\\tau),\\, x(t-2\\tau)\\big]$ de una sola señal caótica, el método detrás de',
@@ -86,6 +86,13 @@ export const ui = {
       unreviewedNote: '— revisión pendiente.',
       back: '← todos los escritos',
       draft: 'BORRADOR',
+      reader: {
+        label: 'Opciones de lectura', size: 'Tamaño', smaller: 'Texto más pequeño', larger: 'Texto más grande',
+        width: 'Ancho', narrow: 'Estrecho', medium: 'Medio', wide: 'Amplio',
+        align: 'Alineación', left: 'Izquierda', justify: 'Justificado', center: 'Centrado',
+        font: 'Letra', serif: 'Serif', sans: 'Sans', mono: 'Mono',
+        images: 'Imágenes', show: 'Mostrar', hide: 'Ocultar', reset: 'Restablecer',
+      },
     },
     chess: {
       kicker: 'AJEDREZ',
@@ -144,7 +151,7 @@ export const ui = {
     },
     home: {
       tagline: 'biomedical engineering · nonlinear dynamics · computational neuroscience',
-      bio: "Biomedical Engineering student at UDLAP on a full scholarship, member of the Honors Program and the university's STEM Representative Team, working where mathematics meets physiology: EEG state-space reconstruction, biomedical instrumentation and research software. From Durango, studying in Puebla.",
+      bio: "Biomedical Engineering student at UDLAP, member of the Honors Program and the university's STEM Representative Team, working where mathematics meets physiology: EEG state-space reconstruction, biomedical instrumentation and research software. From Durango, studying in Puebla.",
       ctaProjects: 'ls ./projects',
       figCaption:
         '↳ behind this text: delay embedding $\\big[x(t),\\, x(t-\\tau),\\, x(t-2\\tau)\\big]$ of a single chaotic signal, the method behind',
@@ -192,6 +199,13 @@ export const ui = {
       unreviewedNote: '— review pending.',
       back: '← all writing',
       draft: 'DRAFT',
+      reader: {
+        label: 'Reading options', size: 'Size', smaller: 'Smaller text', larger: 'Larger text',
+        width: 'Width', narrow: 'Narrow', medium: 'Medium', wide: 'Wide',
+        align: 'Alignment', left: 'Left', justify: 'Justified', center: 'Centred',
+        font: 'Font', serif: 'Serif', sans: 'Sans', mono: 'Mono',
+        images: 'Images', show: 'Show', hide: 'Hide', reset: 'Reset',
+      },
     },
     chess: {
       kicker: 'CHESS',

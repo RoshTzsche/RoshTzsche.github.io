@@ -3,6 +3,7 @@ import 'katex/dist/katex.min.css';
 import { render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import PgnViewer from '../../../components/PgnViewer.astro';
+import ReaderControls from '../../../components/ReaderControls.astro';
 import { useT, otherLang, type Lang } from '../../../i18n/ui';
 import { allPosts, langOf, slugOf, formatDate, readingMinutes, type Post } from '../../../lib/posts';
 import { tex } from '../../../lib/tex';
@@ -33,30 +34,73 @@ const d = post.data;
     author: { '@id': person['@id'], '@type': 'Person', name: person.name, url: person.url },
   })} />
   <link slot="head" rel="alternate" type="text/markdown" href={`/${lang}/writing/${slugOf(post)}.md`} />
-  <article class="wrap post">
-    <a class="back mono" href={`/${lang}/writing/`}>{t.writing.back}</a>
-    <header>
-      <p class="kicker">{t.shelf[d.shelf]} · {formatDate(d.date, lang)} · {readingMinutes(post.body)} {t.writing.minRead}</p>
-      <h1 set:html={tex(d.title)} />
-      <p class="summary" set:html={tex(d.summary)} />
-      {d.translatedFrom && (
-        <p class="translated mono">
-          {t.writing.translatedNote} {d.reviewed ? t.writing.reviewedNote : t.writing.unreviewedNote}
-        </p>
-      )}
-    </header>
-    {d.pgn && <PgnViewer pgn={d.pgn} lang={lang} />}
-    <div class="prose">
-      <Content />
-    </div>
-  </article>
+  <div class="wrap post-shell">
+    <ReaderControls lang={lang} />
+    <article class="reader" data-reader data-width="medium" data-align="left" data-font="serif" data-images="show" lang={lang}>
+      <a class="back mono" href={`/${lang}/writing/`}>{t.writing.back}</a>
+      <header>
+        <p class="kicker">{t.shelf[d.shelf]} · {formatDate(d.date, lang)} · {readingMinutes(post.body)} {t.writing.minRead}</p>
+        <h1 set:html={tex(d.title)} />
+        <p class="summary" set:html={tex(d.summary)} />
+        {d.translatedFrom && (
+          <p class="translated mono">
+            {t.writing.translatedNote} {d.reviewed ? t.writing.reviewedNote : t.writing.unreviewedNote}
+          </p>
+        )}
+      </header>
+      {d.pgn && <PgnViewer pgn={d.pgn} lang={lang} />}
+      <div class="prose">
+        <Content />
+      </div>
+    </article>
+  </div>
 </Base>
 
 <style>
-  .post { padding-block: 48px 0; display: flex; flex-direction: column; gap: 28px; }
+  .post-shell { padding-block: 28px 0; display: flex; flex-direction: column; gap: 36px; }
+
+  /* ---------- reader column (settings come from ReaderControls) ---------- */
+  .reader {
+    --r-scale: 1;
+    --r-width: 70ch;
+    --r-font: Newsreader, Georgia, serif;
+    width: 100%;
+    max-width: var(--r-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    font-family: var(--r-font);
+  }
+  .reader[data-width='narrow'] { --r-width: 56ch; }
+  .reader[data-width='medium'] { --r-width: 70ch; }
+  .reader[data-width='wide'] { --r-width: 96ch; }
+  .reader[data-font='serif'] { --r-font: Newsreader, Georgia, serif; }
+  .reader[data-font='sans'] { --r-font: Inter, system-ui, sans-serif; }
+  .reader[data-font='mono'] { --r-font: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .reader :global(.prose) {
+    max-width: none;
+    font-family: var(--r-font);
+    font-size: calc(clamp(17px, 0.4vw + 14px, 20px) * var(--r-scale));
+  }
+  .reader :global(.prose h2), .reader :global(.prose h3) { font-family: var(--r-font); }
+  .reader[data-align='justify'] :global(.prose p) { text-align: justify; hyphens: auto; }
+  .reader[data-align='center'] :global(.prose p),
+  .reader[data-align='center'] :global(.prose h2),
+  .reader[data-align='center'] :global(.prose h3),
+  .reader[data-align='center'] header { text-align: center; }
+  .reader[data-align='center'] header { align-items: center; }
+  .reader[data-align='center'] :global(.prose > p:first-of-type::first-letter) { float: none; font-size: inherit; padding: 0; }
+  .reader[data-images='hide'] :global(.prose img),
+  .reader[data-images='hide'] :global(.prose figure),
+  .reader[data-images='hide'] :global(.prose video),
+  .reader[data-images='hide'] :global(.prose picture) { display: none; }
+
   .back { font-size: 14px; color: var(--muted); }
-  header { display: flex; flex-direction: column; gap: 14px; max-width: 820px; }
-  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(34px, 5vw, 48px); line-height: 1.12; font-weight: 500; }
-  .summary { margin: 0; font-size: 21px; line-height: 1.55; font-style: italic; color: var(--fg-2); }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  h1 { margin: 0; font-family: var(--r-font); font-size: calc(clamp(32px, 4.4vw, 48px) * var(--r-scale)); line-height: 1.12; font-weight: 500; }
+  .summary { margin: 0; font-size: calc(21px * var(--r-scale)); line-height: 1.55; font-style: italic; color: var(--fg-2); }
   .translated { margin: 0; font-size: 13px; color: var(--muted); padding: 10px 14px; border: 1px dashed var(--line-strong); border-radius: 6px; align-self: flex-start; }
+  .reader[data-align='center'] .translated { align-self: center; }
 </style>
