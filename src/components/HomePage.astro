@@ -35,9 +35,10 @@ const talkGroups = [
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(profile)} />
   <!-- HERO: attractor behind the text, compact EEG on the right -->
   <section class="hero">
-    <div class="hero-bg" aria-hidden="true">
+    <a class="hero-bg" href={`/${lang}/lab/`} aria-label={lang === 'es' ? 'Abrir el laboratorio de atractores' : 'Open the attractor lab'}>
       <Attractor bare label="" />
-    </div>
+      <span class="hero-bg-hint mono" aria-hidden="true">{lang === 'es' ? 'abrir laboratorio →' : 'open the lab →'}</span>
+    </a>
     <div class="wrap hero-grid">
       <div class="hero-text">
         <p class="mono muted prompt"><span class="accent">~ ❯</span> whoami<span class="cursor accent" aria-hidden="true">▌</span></p>
@@ -180,11 +181,17 @@ const talkGroups = [
   .hero { position: relative; overflow: hidden; min-height: calc(100svh - var(--nav-h, 72px)); display: flex; align-items: center; }
   .hero-bg {
     position: absolute; inset: 0;
-    opacity: 0.55; pointer-events: none;
+    opacity: 0.55; cursor: pointer; transition: opacity 0.3s ease;
     -webkit-mask-image: radial-gradient(ellipse 55% 75% at 64% 50%, #000 40%, transparent 100%);
             mask-image: radial-gradient(ellipse 55% 75% at 64% 50%, #000 40%, transparent 100%);
   }
   :global(:root[data-mode='paper']) .hero-bg { opacity: 0.32; }
+  .hero-bg:hover { opacity: 0.8; }
+  .hero-bg-hint { position: absolute; left: 64%; bottom: 12%; transform: translateX(-50%); font-size: 13px; color: var(--accent); opacity: 0; transition: opacity 0.3s ease; }
+  .hero-bg:hover .hero-bg-hint, .hero-bg:focus-visible .hero-bg-hint { opacity: 1; }
+  /* clicks on empty hero space reach the attractor link; text and buttons stay clickable */
+  .hero-grid { pointer-events: none; }
+  .hero-text, .hero-eeg { pointer-events: auto; }
   .hero-grid { position: relative; z-index: 1; width: 100%; padding-block: clamp(48px, 8vh, 120px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: clamp(32px, 5vw, 80px); }
   .hero-text { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: clamp(16px, 2.4vh, 28px); }
   .hero-eeg { flex: 1 1 300px; max-width: clamp(300px, 26vw, 420px); min-width: 0; }
