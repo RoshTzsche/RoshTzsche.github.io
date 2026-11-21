@@ -1,0 +1,226 @@
+---
+// QR generator with a Takens-attractor centre and terminal / paper styles.
+// Error correction H (~30%) keeps it scannable with the centre covered.
+import Base from '../../layouts/Base.astro';
+import { getStaticLangPaths, otherLang, type Lang } from '../../i18n/ui';
+
+export const getStaticPaths = getStaticLangPaths;
+const lang = Astro.params.lang as Lang;
+const site = Astro.site!.href.replace(/\/$/, '');
+const T = {
+  es: {
+    title: 'Generador de QR', kicker: 'HERRAMIENTA', h1: 'QR con atractor',
+    sub: 'Un código QR con un atractor de Takens en el centro. Usa corrección de errores alta (H), así que sigue funcionando aunque el centro esté cubierto.',
+    text: 'Texto o enlace', presets: 'Atajos', style: 'Estilo', terminal: 'terminal', paper: 'papel',
+    download: 'Descargar PNG', downloadSvg: 'Descargar SVG', tip: 'Prueba siempre el código con la cámara de tu teléfono antes de imprimirlo. El estilo papel (oscuro sobre claro) es el más compatible con lectores antiguos.',
+    p: { home: 'Mi web', lab: 'Laboratorio', chess: 'Retarme (Lichess)', cv: 'CV', github: 'GitHub' },
+  },
+  en: {
+    title: 'QR generator', kicker: 'TOOL', h1: 'Attractor QR',
+    sub: 'A QR code with a Takens attractor at its centre. It uses high error correction (H), so it still scans with the centre covered.',
+    text: 'Text or link', presets: 'Shortcuts', style: 'Style', terminal: 'terminal', paper: 'paper',
+    download: 'Download PNG', downloadSvg: 'Download SVG', tip: 'Always test the code with your phone camera before printing it. The paper style (dark on light) is the most compatible with older scanners.',
+    p: { home: 'My site', lab: 'Lab', chess: 'Challenge me (Lichess)', cv: 'CV', github: 'GitHub' },
+  },
+}[lang];
+const presets = [
+  [T.p.home, `${site}/`],
+  [T.p.lab, `${site}/${lang}/lab/`],
+  [T.p.chess, 'https://lichess.org/?user=DracoKerouac#friend'],
+  [T.p.cv, `${site}/cv.pdf`],
+  [T.p.github, 'https://github.com/RoshTzsche'],
+];
+---
+<Base lang={lang} title={T.title} defaultMode="terminal" current="qr" altPath={`/${otherLang(lang)}/qr/`}>
+  <section class="wrap qr-page">
+    <div class="qr-text">
+      <p class="kicker">{T.kicker}</p>
+      <h1>{T.h1}</h1>
+      <p class="sub">{T.sub}</p>
+
+      <label class="field">
+        <span class="lbl mono">{T.text}</span>
+        <input type="text" value={`${site}/`} data-qr-input spellcheck="false" autocomplete="off" />
+      </label>
+
+      <div class="field">
+        <span class="lbl mono">{T.presets}</span>
+        <div class="chips">
+          {presets.map(([label, url]) => <button type="button" class="chip" data-preset={url}>{label}</button>)}
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="lbl mono">{T.style}</span>
+        <div class="chips" role="group" aria-label={T.style}>
+          <button type="button" class="chip" data-style="terminal" aria-pressed="true">{T.terminal}</button>
+          <button type="button" class="chip" data-style="paper" aria-pressed="false">{T.paper}</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" data-dl="png">{T.download}</button>
+        <button type="button" class="btn" data-dl="svg">{T.downloadSvg}</button>
+      </div>
+      <p class="tip">{T.tip}</p>
+    </div>
+
+    <figure class="qr-fig">
+      <canvas width="1024" height="1024" data-qr role="img" aria-label="QR"></canvas>
+      <figcaption class="mono" data-qr-caption></figcaption>
+    </figure>
+  </section>
+</Base>
+
+<script>
+  import QRCode from 'qrcode';
+
+  const PALETTES = {
+    terminal: { bg: '#0e0f13', fg: '#e6e6e6', accent: '#b48ead', muted: '#9aa0ad' },
+    paper: { bg: '#f4efe4', fg: '#1f1d1a', accent: '#1f3a68', muted: '#5b5346' },
+  } as const;
+  type Style = keyof typeof PALETTES;
+
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-qr]')!;
+  const input = document.querySelector<HTMLInputElement>('[data-qr-input]')!;
+  const caption = document.querySelector<HTMLElement>('[data-qr-caption]')!;
+  let style: Style = 'terminal';
+
+  // Takens reconstruction of a Lorenz signal, normalised to [-1, 1]
+  const attractor = (() => {
+    let x = 1, y = 1, z = 1; const xs: number[] = [];
+    for (let i = 0; i < 9000; i++) {
+      const dx = 10 * (y - x), dy = x * (28 - z) - y, dz = x * y - (8 / 3) * z;
+      x += dx * 0.006; y += dy * 0.006; z += dz * 0.006;
+      if (i > 600 && i % 2 === 0) xs.push(x);
+    }
+    const tau = 9, pts: [number, number][] = [];
+    let m = [0, 0, 0];
+    for (let i = 2 * tau; i < xs.length; i++) { m[0] += xs[i]; m[1] += xs[i - tau]; m[2] += xs[i - 2 * tau]; }
+    m = m.map((v) => v / (xs.length - 2 * tau));
+    const ca = Math.cos(0.6), sa = Math.sin(0.6), ct = Math.cos(0.55), st = Math.sin(0.55);
+    let r = 0;
+    for (let i = 2 * tau; i < xs.length; i++) {
+      const a = xs[i] - m[0], b = xs[i - tau] - m[1], c = xs[i - 2 * tau] - m[2];
+      const u = a - b, v = a + b - 2 * c, w = a + b + c;
+      const X = u * ca + w * 0.35 * sa, Z = -u * sa + w * 0.35 * ca, Y = v * 0.62 * ct - Z * st;
+      pts.push([X, Y]); r = Math.max(r, Math.abs(X), Math.abs(Y));
+    }
+    return pts.map(([X, Y]) => [X / r, Y / r] as [number, number]);
+  })();
+
+  type Shape = { modules: (r: number, c: number) => boolean; n: number };
+  function build(text: string): Shape {
+    const qr = QRCode.create(text || ' ', { errorCorrectionLevel: 'H' });
+    const n = qr.modules.size;
+    return { n, modules: (r, c) => Boolean(qr.modules.get(r, c)) };
+  }
+  const isFinder = (r: number, c: number, n: number) =>
+    (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+
+  // Draws into a Canvas-like target. Also used to emit SVG.
+  function render(q: Shape, size: number, draw: {
+    rect: (x: number, y: number, w: number, h: number, rad: number, color: string) => void;
+    ring: (x: number, y: number, w: number, t: number, rad: number, color: string) => void;
+    path: (pts: [number, number][], color: string, width: number) => void;
+    text: (s: string, x: number, y: number, px: number, color: string) => void;
+  }) {
+    const P = PALETTES[style];
+    const quiet = 4, cell = size / (q.n + quiet * 2), off = quiet * cell;
+    draw.rect(0, 0, size, size, size * 0.04, P.bg);
+    // centre window (≈ 22% of the code side; H level tolerates it)
+    const win = Math.round(q.n * 0.22) | 1, w0 = Math.floor((q.n - win) / 2), w1 = w0 + win;
+    const inWin = (r: number, c: number) => r >= w0 - 1 && r <= w1 && c >= w0 - 1 && c <= w1;
+    for (let r = 0; r < q.n; r++) for (let c = 0; c < q.n; c++) {
+      if (!q.modules(r, c) || isFinder(r, c, q.n) || inWin(r, c)) continue;
+      const g = cell * 0.12;
+      draw.rect(off + c * cell + g, off + r * cell + g, cell - 2 * g, cell - 2 * g, cell * 0.22, P.fg);
+    }
+    // finder patterns: terminal-style rounded rings with an accent "eye"
+    for (const [r, c] of [[0, 0], [0, q.n - 7], [q.n - 7, 0]]) {
+      const x = off + c * cell, y = off + r * cell;
+      draw.ring(x, y, 7 * cell, cell, cell * 1.6, P.fg);
+      draw.rect(x + 2 * cell, y + 2 * cell, 3 * cell, 3 * cell, cell * 0.8, P.accent);
+    }
+    // centre: Takens attractor + prompt
+    const cx = off + (w0 + win / 2) * cell, cy = off + (w0 + win / 2) * cell, half = (win / 2) * cell * 0.9;
+    draw.path(attractor.map(([X, Y]) => [cx + X * half, cy - half * 0.12 + Y * half * 0.78] as [number, number]), P.accent, Math.max(1, cell * 0.08));
+    draw.text('~ ❯ rosh', cx, cy + half * 0.95, cell * 0.9, P.muted);
+  }
+
+  function toCanvas(q: Shape) {
+    const ctx = canvas.getContext('2d')!; const S = canvas.width;
+    ctx.clearRect(0, 0, S, S);
+    const rr = (x: number, y: number, w: number, h: number, rad: number) => {
+      ctx.beginPath(); ctx.moveTo(x + rad, y); ctx.arcTo(x + w, y, x + w, y + h, rad); ctx.arcTo(x + w, y + h, x, y + h, rad);
+      ctx.arcTo(x, y + h, x, y, rad); ctx.arcTo(x, y, x + w, y, rad); ctx.closePath();
+    };
+    render(q, S, {
+      rect: (x, y, w, h, rad, color) => { rr(x, y, w, h, rad); ctx.fillStyle = color; ctx.fill(); },
+      ring: (x, y, w, t, rad, color) => { ctx.lineWidth = t; ctx.strokeStyle = color; rr(x + t / 2, y + t / 2, w - t, w - t, rad); ctx.stroke(); },
+      path: (pts, color, width) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.globalAlpha = 0.9; ctx.stroke(); ctx.globalAlpha = 1; },
+      text: (s, x, y, px, color) => { ctx.fillStyle = color; ctx.font = `${px}px "JetBrains Mono", monospace`; ctx.textAlign = 'center'; ctx.fillText(s, x, y); },
+    });
+  }
+
+  function toSvg(q: Shape) {
+    const S = 1024, parts: string[] = [];
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    render(q, S, {
+      rect: (x, y, w, h, rad, color) => parts.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="${rad.toFixed(2)}" fill="${color}"/>`),
+      ring: (x, y, w, t, rad, color) => parts.push(`<rect x="${(x + t / 2).toFixed(2)}" y="${(y + t / 2).toFixed(2)}" width="${(w - t).toFixed(2)}" height="${(w - t).toFixed(2)}" rx="${rad.toFixed(2)}" fill="none" stroke="${color}" stroke-width="${t.toFixed(2)}"/>`),
+      path: (pts, color, width) => parts.push(`<path d="${pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('')}" fill="none" stroke="${color}" stroke-width="${width.toFixed(2)}" stroke-opacity="0.9" stroke-linejoin="round"/>`),
+      text: (s, x, y, px, color) => parts.push(`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-family="JetBrains Mono, monospace" font-size="${px.toFixed(1)}" text-anchor="middle" fill="${color}">${esc(s)}</text>`),
+    });
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}" width="${S}" height="${S}">${parts.join('')}</svg>`;
+  }
+
+  let current: Shape | null = null;
+  function update() {
+    try {
+      current = build(input.value.trim());
+      toCanvas(current);
+      caption.textContent = `${current.n}×${current.n} · ECC H · ${input.value.trim()}`;
+    } catch (e) {
+      caption.textContent = String((e as Error).message || e);
+    }
+  }
+  const download = (href: string, name: string) => { const a = document.createElement('a'); a.href = href; a.download = name; a.click(); };
+
+  input.addEventListener('input', update);
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) =>
+    b.addEventListener('click', () => { input.value = b.dataset.preset!; update(); }));
+  document.querySelectorAll<HTMLButtonElement>('[data-style]').forEach((b) =>
+    b.addEventListener('click', () => {
+      style = b.dataset.style as Style;
+      document.querySelectorAll('[data-style]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      update();
+    }));
+  document.querySelector('[data-dl="png"]')!.addEventListener('click', () =>
+    canvas.toBlob((blob) => blob && download(URL.createObjectURL(blob), `qr-${style}.png`), 'image/png'));
+  document.querySelector('[data-dl="svg"]')!.addEventListener('click', () => {
+    if (!current) return;
+    download(URL.createObjectURL(new Blob([toSvg(current)], { type: 'image/svg+xml' })), `qr-${style}.svg`);
+  });
+  document.fonts?.ready.then(update);
+  update();
+</script>
+
+<style>
+  .qr-page { padding-block: 64px 24px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: clamp(32px, 5vw, 72px); }
+  .qr-text { flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(32px, 4.5vw, 56px); line-height: 1.08; font-weight: 700; }
+  :global(:root[data-mode='paper']) h1 { font-weight: 500; }
+  .sub { margin: 0; font-size: 18px; line-height: 1.6; color: var(--fg-2); }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  input[type='text'] { min-height: 48px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--fg); font-family: var(--font-mono); font-size: 15px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--fg-2); font: inherit; font-size: 14px; cursor: pointer; }
+  .chip[aria-pressed='true'] { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tip { margin: 0; font-size: 14px; color: var(--muted); }
+  .qr-fig { flex: 1 1 360px; max-width: 520px; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .qr-fig canvas { width: 100%; height: auto; aspect-ratio: 1; border-radius: 16px; box-shadow: var(--shadow); }
+  .qr-fig figcaption { font-size: 12px; color: var(--muted); word-break: break-all; }
+</style>
