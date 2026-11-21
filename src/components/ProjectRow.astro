@@ -11,7 +11,7 @@ const image = ['webp', 'jpg', 'jpeg', 'png', 'gif']
   .find((src) => fs.existsSync(`public${src}`));
 const tags = p.stack.split('·').map((s) => s.trim());
 ---
-<article id={`p-${p.repo}`} class:list={['row', { compact, 'has-image': !!image }]}>
+<article id={`p-${p.repo}`} class:list={['row', { compact, 'has-image': !!image }]} data-areas={p.areas.join(' ')}>
   <span class="idx mono" aria-hidden="true">{String(n).padStart(2, '0')}</span>
 
   <div class="head">
@@ -21,11 +21,12 @@ const tags = p.stack.split('·').map((s) => s.trim());
         {p.title[lang]}<span class="arrow" aria-hidden="true">↗</span>
       </a>
     </h3>
-    <p class="repo mono">github / {p.repo}</p>
+    <p class="hook">{p.hook[lang]}</p>
   </div>
 
   <div class="desc">
     <p>{p.body[lang]}</p>
+    <p class="repo mono">github.com/RoshTzsche/{p.repo}</p>
     <ul class="tags mono" aria-label="Stack">
       {tags.map((t) => <li>{t}</li>)}
     </ul>
@@ -62,14 +63,20 @@ const tags = p.stack.split('·').map((s) => s.trim());
   .head { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .award { margin: 0; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg); }
   .star { color: var(--accent); }
-  h3 { margin: 0; font-family: var(--font-display); font-size: clamp(26px, 2.6vw, 38px); line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; }
+  h3 { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2vw, 30px); line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; }
+  .hook { margin: 0; font-size: clamp(17px, 0.5vw + 13px, 21px); line-height: 1.4; color: var(--fg); }
+  :global(:root[data-mode='terminal']) .hook { font-family: var(--font-body); }
+  :global(:root[data-mode='paper']) .hook { font-style: italic; }
   :global(:root[data-mode='paper']) h3 { font-weight: 500; letter-spacing: 0; }
   h3 a::after { content: ''; position: absolute; inset: 0; } /* whole row clickable */
   .arrow { display: inline-block; margin-left: 0.25em; font-size: 0.6em; vertical-align: 0.35em; color: var(--muted); transition: transform 0.2s ease, color 0.2s ease; }
-  .repo { margin: 0; font-size: 12px; color: var(--muted); }
+  .repo { margin: 0; font-size: 12px; color: var(--muted); opacity: 0.8; }
+  .row[hidden] { display: none; }
 
   .desc { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding-top: 0.3em; }
-  .desc > p:first-child { margin: 0; font-size: clamp(16px, 0.35vw + 13px, 18px); line-height: 1.65; color: var(--fg-2); }
+  .desc { gap: 12px; }
+  .desc > p:first-child { margin: 0; font-size: clamp(15px, 0.3vw + 12px, 17px); line-height: 1.65; color: var(--muted); }
+  .row:hover .desc > p:first-child { color: var(--fg-2); }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
   .tags li { padding: 3px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 12px; color: var(--muted); }
   .foot { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); position: relative; z-index: 1; }

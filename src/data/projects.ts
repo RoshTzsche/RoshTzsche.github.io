@@ -1,5 +1,6 @@
 // To add a project: copy one object, change the fields. Text goes in both languages.
 type L = { es: string; en: string };
+export type Area = 'biomed' | 'ai' | 'hardware' | 'web';
 export type Project = {
   repo: string;          // repository name on github.com/RoshTzsche
   stack: string;         // short "language · library" line
@@ -8,6 +9,8 @@ export type Project = {
   foot?: L;              // event / context line
   award?: L;             // shown highlighted
   links?: { label: L; href: string }[];
+  hook: L;               // one short line: what it is, in plain words
+  areas: Area[];         // used by the filter chips
   // Image: drop a file named <repo>.webp / .jpg / .png / .gif into public/projects/
   // and it shows up automatically. Optional alt text:
   imageAlt?: L;
@@ -19,6 +22,8 @@ export const repoUrl = gh;
 export const featured: Project[] = [
   {
     repo: 'eeg_phase_space',
+    hook: { es: 'Ver la geometría oculta de una señal cerebral', en: 'Seeing the hidden geometry of a brain signal' },
+    areas: ['biomed', 'ai'],
     stack: 'Python · NumPy · SciPy · Dash',
     title: { es: 'Reconstrucción del espacio de fases en EEG', en: 'EEG Phase-Space Reconstruction' },
     body: {
@@ -29,6 +34,8 @@ export const featured: Project[] = [
   },
   {
     repo: 'mars_walker',
+    hook: { es: 'Caminar por Marte antes de ir', en: 'Walking on Mars before going there' },
+    areas: ['web'],
     stack: 'JavaScript · Three.js · Vite',
     title: { es: 'MarsWalker', en: 'MarsWalker' },
     body: {
@@ -42,6 +49,8 @@ export const featured: Project[] = [
   },
   {
     repo: 'mova',
+    hook: { es: 'Manejar una silla de ruedas con la cara', en: 'Driving a wheelchair with your face' },
+    areas: ['biomed', 'ai', 'hardware'],
     stack: 'Python · MediaPipe · serial',
     title: { es: 'MOVA — silla de ruedas por gestos faciales', en: 'MOVA — facial-gesture wheelchair' },
     body: {
@@ -52,6 +61,8 @@ export const featured: Project[] = [
   },
   {
     repo: 'gota_poblana',
+    hook: { es: 'Agua más segura, una gota de ácido a la vez', en: 'Safer water, one drop of acid at a time' },
+    areas: ['hardware'],
     stack: 'C++ · ESP32-S3 · Flutter · MQTT',
     title: { es: 'Gota Poblana', en: 'Gota Poblana' },
     body: {
@@ -62,6 +73,8 @@ export const featured: Project[] = [
   },
   {
     repo: 'fruticebada',
+    hook: { es: 'Predecir la cosecha desde el espacio', en: 'Predicting the harvest from space' },
+    areas: ['ai', 'web'],
     stack: 'Python · scikit-learn · SHAP · Node',
     title: { es: 'Fruticebada', en: 'Fruticebada' },
     body: {
@@ -76,6 +89,8 @@ export const featured: Project[] = [
   },
   {
     repo: 'ojo_de_halcon',
+    hook: { es: 'Táctica de fútbol en tiempo real', en: 'Football tactics in real time' },
+    areas: ['ai', 'web'],
     stack: 'Swift · SwiftUI',
     title: { es: 'Ojo de Halcón', en: 'Ojo de Halcón' },
     body: {
@@ -92,6 +107,8 @@ export const featured: Project[] = [
 export const lab: Project[] = [
   {
     repo: 'ppg_pulse_monitor',
+    hook: { es: 'El pulso, del sensor a la pantalla', en: 'A heartbeat, from sensor to screen' },
+    areas: ['biomed', 'hardware'],
     stack: 'C · PIC · analog design',
     title: { es: 'Monitor de pulso PPG', en: 'PPG pulse monitor' },
     body: {
@@ -101,6 +118,8 @@ export const lab: Project[] = [
   },
   {
     repo: 'ct_neuro_viewer',
+    hook: { es: 'Ver dentro del cráneo en unidades Hounsfield', en: 'Looking inside the skull in Hounsfield units' },
+    areas: ['biomed'],
     stack: 'Python · DICOM · Tkinter',
     title: { es: 'Visor de neuroimagen CT', en: 'CT neuroimaging viewer' },
     body: {
@@ -111,6 +130,8 @@ export const lab: Project[] = [
   },
   {
     repo: 'metagenomics_kraken',
+    hook: { es: 'Qué come un acocil, leído en su ADN', en: 'What a crayfish eats, read from DNA' },
+    areas: ['biomed'],
     stack: 'Python · R · Bash',
     title: { es: 'Metagenómica de la dieta del acocil', en: 'Crayfish diet metagenomics' },
     body: {
@@ -125,6 +146,8 @@ export const lab: Project[] = [
   },
   {
     repo: 'biomedical_showcase',
+    hook: { es: 'Algoritmos sobre datos clínicos reales', en: 'Algorithms on real clinical data' },
+    areas: ['biomed', 'ai'],
     stack: 'Jupyter · NumPy · scikit-learn',
     title: { es: 'Biomedical showcase', en: 'Biomedical showcase' },
     body: {
@@ -139,7 +162,7 @@ export const distinctions = [
   { href: '#p-gota_poblana', tag: 'HACKATÓN PUEBLA 2026', es: '2.º lugar — Gota Poblana', en: '2nd place — Gota Poblana' },
   { href: '#p-ojo_de_halcon', tag: 'ENACTUS 2025', es: '2.º lugar nacional, IA para impacto social', en: '2nd place national, AI for social impact' },
   { href: '#math', tag: 'UDLAP', es: 'Programa de Honores · Promedio 9.6 · Putnam 2026', en: 'Honors Program · GPA 9.6 · Putnam 2026' },
-  { href: 'https://www.youtube.com/@stemudlap', tag: 'EQUIPO STEM UDLAP', es: 'Equipo representativo · host del podcast STEMpire', en: 'STEM Representative Team · STEMpire podcast host' },
+  { href: 'https://www.youtube.com/@stemudlap', tag: 'EQUIPO STEM UDLAP', es: 'Equipo representativo · co-host ocasional del podcast STEMpire', en: 'Representative Team · occasional co-host, STEMpire podcast' },
 ];
 
 export const competitions = [

@@ -21,8 +21,8 @@ const profile = {
   dateModified: new Date().toISOString(),
   mainEntity: person,
 };
-// Award-winning projects first, then the rest
-const ordered = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.award)];
+// Award-winning projects first, then the rest of the featured, then the lab
+const all = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.award), ...lab];
 ---
 <Base lang={lang} defaultMode="terminal" altPath={`/${otherLang(lang)}/`} canonicalPath={`/${lang}/`} rootRedirect={root} fullTitle={lang === 'es' ? 'Rosh Guadiana Páez — Ingeniería Biomédica · UDLAP' : 'Rosh Guadiana Páez — Biomedical Engineering · UDLAP'}>
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(profile)} />
@@ -41,6 +41,7 @@ const ordered = [...featured.filter((p) => p.award), ...featured.filter((p) => !
           <a class="btn btn-primary" href="#projects">{t.home.ctaProjects}</a>
           <a class="btn" href="https://github.com/RoshTzsche">github</a>
           <a class="btn" href="/cv.pdf">cv.pdf</a>
+          <a class="btn" href={`/${lang}/chess/`}><img class="btn-ico" src="/pieces/merida/wN.svg" alt="" width="20" height="20" />{t.home.chessBtn}</a>
         </div>
         <p class="fig-note mono"><Fragment set:html={tex(t.home.figCaption)} /> <a href="https://github.com/RoshTzsche/eeg_phase_space">eeg_phase_space</a>.</p>
       </div>
@@ -59,47 +60,68 @@ const ordered = [...featured.filter((p) => p.award), ...featured.filter((p) => !
     </ul>
   </section>
 
-  <!-- PROJECTS -->
+  <!-- PROJECTS: one list, award-winning first, filterable by area -->
   <section id="projects" class="wrap block">
+    <span id="biomedical" class="anchor" aria-hidden="true"></span>
     <div class="block-head">
       <h2 class="section-title"><span class="prefix">~/</span>{t.home.projectsTitle}</h2>
       <a class="mono muted" href="https://github.com/RoshTzsche?tab=repositories">{t.home.allRepos}</a>
     </div>
-    <div class="rows">
-      {ordered.map((p, i) => <ProjectRow p={p} lang={lang} n={i + 1} />)}
+    <div class="filters" role="group" aria-label={t.home.filterLabel}>
+      {(['all', 'biomed', 'ai', 'hardware', 'web'] as const).map((k) => (
+        <button type="button" data-filter={k} aria-pressed={k === 'all' ? 'true' : 'false'}>
+          {t.home.areas[k]} <span class="count mono">{k === 'all' ? all.length : all.filter((p) => p.areas.includes(k)).length}</span>
+        </button>
+      ))}
+    </div>
+    <div class="rows" data-rows>
+      {all.map((p, i) => <ProjectRow p={p} lang={lang} n={i + 1} />)}
     </div>
   </section>
 
-  <!-- BIOMEDICAL -->
-  <section id="biomedical" class="wrap block">
-    <div class="block-head col">
-      <h2 class="section-title"><span class="prefix">~/</span>{t.home.labTitle}</h2>
-      <p class="muted sub">{t.home.labSub}</p>
-    </div>
-    <div class="rows lab-rows">
-      {lab.map((p, i) => <ProjectRow p={p} lang={lang} n={i + 1} compact />)}
+  <!-- MATH: lectures first, then what I'm studying; quiet styling -->
+  <section id="math" class="wrap block">
+    <h2 class="section-title"><span class="prefix">~/</span>{t.home.mathTitle}</h2>
+    <div class="math-grid">
+      <article class="lectures">
+        <p class="kicker">{t.home.classesKicker}</p>
+        <h3>{t.home.classesTitle}</h3>
+        <p class="text">{t.home.classesBody}</p>
+        <a class="btn btn-primary lec-btn" href="https://github.com/RoshTzsche/logic_lectures">{t.home.classesCta} →</a>
+        <p class="also">{t.home.classesAlso}</p>
+      </article>
+      <div class="math-side">
+        <div>
+          <p class="kicker">{t.home.studyingTitle}</p>
+          <ul class="pills">
+            {t.home.studying.map((s) => <li set:html={tex(s)} />)}
+          </ul>
+        </div>
+        <div>
+          <p class="kicker">{t.home.competitions}</p>
+          <ul class="comps">
+            {competitions.map((c) => (
+              <li><span>{typeof c.title === 'string' ? c.title : c.title[lang]}</span><span class="muted">{c[lang]}</span></li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- MATH -->
-  <section id="math" class="wrap block split">
-    <div class="card grow">
-      <h2 class="section-title"><span class="prefix">~/</span>{t.home.mathTitle}</h2>
-      <p class="mono muted small">$ cat {t.home.nowStudying}</p>
-      <ul class="chips">
-        {t.home.studying.map((s) => <li set:html={tex(s)} />)}
-      </ul>
-      <p class="text"><a class="accent" href="https://github.com/RoshTzsche/logic_lectures">logic_lectures</a> {t.home.lectures}</p>
-    </div>
-    <div class="card side">
-      <p class="kicker accent">{t.home.competitions}</p>
-      <ul class="comps">
-        {competitions.map((c) => (
-          <li><strong>{typeof c.title === 'string' ? c.title : c.title[lang]}</strong><br /><span class="muted">{c[lang]}</span></li>
-        ))}
-      </ul>
-    </div>
-  </section>
+  <script>
+    // Project filters (content stays in the HTML; this only hides rows)
+    const rows = [...document.querySelectorAll<HTMLElement>('[data-rows] .row')];
+    const btns = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const setFilter = (f: string) => {
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === f)));
+      rows.forEach((r) => { r.hidden = f !== 'all' && !(r.dataset.areas || '').split(' ').includes(f); });
+    };
+    btns.forEach((b) => b.addEventListener('click', () => setFilter(b.dataset.filter!)));
+    // the "biomedical" nav link lands here with the filter on
+    const fromHash = () => { if (location.hash === '#biomedical') setFilter('biomed'); };
+    fromHash(); window.addEventListener('hashchange', fromHash);
+  </script>
 
   <!-- RESEARCH + WRITING TEASER -->
   <section id="research" class="wrap block split">
@@ -167,10 +189,6 @@ const ordered = [...featured.filter((p) => p.award), ...featured.filter((p) => !
   .block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; }
   .block-head.col { flex-direction: column; align-items: flex-start; gap: 8px; }
   .block-head a { font-size: 14px; }
-  .rows { display: flex; flex-direction: column; }
-  .lab-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); column-gap: clamp(24px, 4vw, 64px); }
-  .lab-rows > :global(.row:last-child) { border-bottom: 0; }
-  .lab-rows { border-bottom: 1px solid var(--line); }
   .sub { margin: 0; font-size: 16px; }
   .split { flex-direction: row; flex-wrap: wrap; gap: 20px; }
   .grow { flex: 999 1 520px; min-width: 0; padding: clamp(20px, 3vw, 28px); }
@@ -178,11 +196,7 @@ const ordered = [...featured.filter((p) => p.award), ...featured.filter((p) => !
   .small { margin: 0; font-size: 13px; }
   .text { margin: 0; font-size: 16px; line-height: 1.6; color: var(--fg-2); }
   .role { margin: 0; font-size: 17px; font-weight: 600; }
-  .chips { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px; }
-  .chips li { padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; font-size: 16px; }
   .card.side { padding: 28px; }
-  .comps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.5; }
-  .comps strong { font-weight: 600; }
 
   .paper-teaser { padding: 28px; border-radius: 10px; background: #f4efe4; color: #1f1d1a; border: 1px solid #d9d0bf; display: flex; flex-direction: column; gap: 12px; }
   .paper-teaser .mono { color: #5b5346; }
@@ -190,4 +204,28 @@ const ordered = [...featured.filter((p) => p.award), ...featured.filter((p) => !
   .teaser-title { font-family: Newsreader, Georgia, serif; font-size: 26px; line-height: 1.25; }
   :global(:root[data-mode='paper']) .paper-teaser { background: var(--surface-2); }
   @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+  .btn-ico { width: 20px; height: 20px; }
+  .anchor { position: relative; top: -96px; }
+  .rows { display: flex; flex-direction: column; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .filters button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1px solid var(--line-strong); border-radius: 999px; background: transparent; color: var(--fg-2); font: inherit; font-size: 14px; cursor: pointer; }
+  .filters button:hover { border-color: var(--fg-2); }
+  .filters button[aria-pressed='true'] { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+  .count { font-size: 11px; opacity: 0.7; }
+
+  .math-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: start; }
+  @media (max-width: 860px) { .math-grid { grid-template-columns: 1fr; } }
+  .lectures { display: flex; flex-direction: column; gap: 16px; padding: clamp(24px, 3vw, 40px); border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); }
+  .lectures h3 { margin: 0; font-family: var(--font-display); font-size: clamp(28px, 3vw, 42px); line-height: 1.1; font-weight: 700; }
+  :global(:root[data-mode='paper']) .lectures h3 { font-weight: 500; }
+  .lectures .text { font-size: clamp(16px, 0.35vw + 13px, 18px); line-height: 1.65; }
+  .lec-btn { align-self: flex-start; }
+  .also { margin: 0; font-size: 14px; color: var(--muted); }
+  .math-side { display: flex; flex-direction: column; gap: 32px; padding-top: 8px; }
+  .math-side .kicker { margin-bottom: 14px; }
+  .pills { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+  .pills li { display: inline-flex; align-items: center; justify-content: center; text-align: center; min-height: 40px; padding: 6px 16px; border: 1px solid var(--line); border-radius: 999px; font-size: 15px; color: var(--fg-2); }
+  .comps { margin: 0; padding: 0; list-style: none; }
+  .comps li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .comps li:last-child { border-bottom: 1px solid var(--line); }
 </style>
