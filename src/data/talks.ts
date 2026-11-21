@@ -22,7 +22,7 @@ const summer = { es: 'verano', en: 'summer' };
 
 export const items: Item[] = [
   // ---- 2024 ----
-  { date: '2024-07', when: summer, kind: 'workshop', title: { es: 'Taller de ADN y biología estructural', en: 'DNA and structural biology workshop' }, where: { es: 'Verano STEM UDLAP', en: 'Verano STEM UDLAP' } },
+  { date: '2025-07', when: summer, kind: 'workshop', title: { es: 'Taller de ADN y biología estructural', en: 'DNA and structural biology workshop' }, where: { es: 'Verano STEM UDLAP', en: 'Verano STEM UDLAP' } },
   { date: '2024-08', kind: 'milestone', title: { es: 'Empiezo Ingeniería Biomédica en la UDLAP', en: 'I start Biomedical Engineering at UDLAP' }, where: { es: 'Equipo Representativo STEM', en: 'STEM Representative Team' } },
   { date: '2024-10', kind: 'hackathon', title: { es: 'Mi primer NASA Space Apps Challenge — ExoSky', en: 'My first NASA Space Apps Challenge — ExoSky' }, where: { es: 'Exoplanetas y mecánica celeste', en: 'Exoplanets and celestial mechanics' } },
   { date: '2024-11-09', kind: 'workshop', title: { es: 'Taller de divulgación', en: 'Outreach workshop' }, where: { es: 'Noche de las Estrellas', en: 'Noche de las Estrellas' } },
@@ -30,7 +30,7 @@ export const items: Item[] = [
   // ---- 2025 ----
   { date: '2025-05', kind: 'talk', title: { es: 'Visor DICOM con mapeo en unidades Hounsfield', en: 'DICOM viewer with Hounsfield-unit mapping' }, where: { es: 'UDLAP ExpoCEM', en: 'UDLAP ExpoCEM' }, href: 'https://github.com/RoshTzsche/ct_neuro_viewer' },
   { date: '2025-06-25', when: { es: '25–27 jun', en: 'jun 25–27' }, kind: 'staff', title: { es: 'Staff — 1.ª Conferencia Mexicana de Robots Inteligentes', en: 'Staff — 1st Mexican Conference on Intelligent Robots' }, where: { es: 'MEXCIR, Ciudad de México', en: 'MEXCIR, Mexico City' } },
-  { date: '2025-07', when: summer, kind: 'workshop', title: { es: 'Taller de computación cuántica', en: 'Quantum computing workshop' }, where: { es: 'Verano STEM UDLAP', en: 'Verano STEM UDLAP' } },
+  { date: '2026-07', when: summer, kind: 'workshop', title: { es: 'Taller de computación cuántica', en: 'Quantum computing workshop' }, where: { es: 'Verano STEM UDLAP', en: 'Verano STEM UDLAP' } },
   { date: '2025-09', when: { es: '2025', en: '2025' }, kind: 'award', title: { es: '2.º lugar nacional — Ojo de Halcón', en: '2nd place national — Ojo de Halcón' }, where: { es: 'Swift Changemakers Hackathon (Enactus)', en: 'Swift Changemakers Hackathon (Enactus)' }, href: 'https://github.com/RoshTzsche/ojo_de_halcon' },
   { date: '2025-10', kind: 'hackathon', title: { es: 'NASA Space Apps — Asteroid-DB', en: 'NASA Space Apps — Asteroid-DB' }, where: { es: 'Reto Meteor Madness', en: 'Meteor Madness challenge' }, href: 'https://github.com/RoshTzsche/asteroid_db' },
   { date: '2025-11-03', when: { es: '3–7 nov', en: 'nov 3–7' }, kind: 'staff', title: { es: 'Staff — 16.ª Conferencia Internacional de Micro Vehículos Aéreos', en: 'Staff — 16th International Micro Air Vehicle Conference' }, where: { es: 'IMAV, San Andrés Cholula', en: 'IMAV, San Andrés Cholula' } },
