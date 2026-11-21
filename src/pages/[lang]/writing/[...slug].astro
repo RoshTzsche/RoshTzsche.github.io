@@ -32,6 +32,7 @@ const d = post.data;
     datePublished: d.date.toISOString(), inLanguage: lang, keywords: d.tags.join(', '),
     author: { '@id': person['@id'], '@type': 'Person', name: person.name, url: person.url },
   })} />
+  <link slot="head" rel="alternate" type="text/markdown" href={`/${lang}/writing/${slugOf(post)}.md`} />
   <article class="wrap post">
     <a class="back mono" href={`/${lang}/writing/`}>{t.writing.back}</a>
     <header>

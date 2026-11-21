@@ -1,41 +1,7 @@
 ---
-// Root: send the visitor to /es/ or /en/ according to their saved choice
-// or their browser language (English as fallback).
+// The root serves the full English home as static HTML, so crawlers that don't
+// run JavaScript (GPTBot, ClaudeBot, PerplexityBot…) see everything.
+// Visitors whose saved choice or browser language is Spanish are sent to /es/.
+import HomePage from '../components/HomePage.astro';
 ---
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rosh Guadiana Páez — Biomedical Engineering · UDLAP</title>
-  <meta name="description" content="Rosh Guadiana Páez — biomedical engineering, nonlinear dynamics and computational neuroscience. Projects, research and writing." />
-  <link rel="canonical" href="https://roshtzsche.github.io/en/" />
-  <link rel="alternate" hreflang="es" href="/es/" />
-  <link rel="alternate" hreflang="en" href="/en/" />
-  <link rel="alternate" hreflang="x-default" href="/en/" />
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <script is:inline>
-    (function () {
-      var lang = null;
-      try { lang = localStorage.getItem('lang'); } catch (e) {}
-      if (lang !== 'es' && lang !== 'en') {
-        var prefs = navigator.languages || [navigator.language || ''];
-        lang = 'en';
-        for (var i = 0; i < prefs.length; i++) {
-          var p = (prefs[i] || '').toLowerCase();
-          if (p.indexOf('es') === 0) { lang = 'es'; break; }
-          if (p.indexOf('en') === 0) { lang = 'en'; break; }
-        }
-      }
-      location.replace('/' + lang + '/' + location.hash);
-    })();
-  </script>
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0e0f13; color: #e6e6e6; font-family: 'JetBrains Mono', monospace; }
-    a { color: #b48ead; margin: 0 12px; }
-  </style>
-</head>
-<body>
-  <p><a href="/es/">Español</a> · <a href="/en/">English</a></p>
-</body>
-</html>
+<HomePage lang="en" root />

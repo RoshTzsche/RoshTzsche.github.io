@@ -15,16 +15,18 @@ interface Props {
   current?: string;
   altPath?: string; // same page in the other language
   fullTitle?: string; // overrides the whole <title>
+  canonicalPath?: string;
+  rootRedirect?: boolean; // only on '/': send Spanish visitors to /es/
   ogType?: string;
 }
 
-const { lang, title, description, defaultMode = 'terminal', current = '', altPath, ogType = 'website' } = Astro.props;
+const { lang, title, description, defaultMode = 'terminal', current = '', altPath, ogType = 'website', canonicalPath, rootRedirect = false } = Astro.props;
 const t = useT(lang);
 const fullTitle = Astro.props.fullTitle ?? (title ? `${title} — Rosh Guadiana Páez` : 'Rosh Guadiana Páez');
 const desc = description ?? t.meta.description;
 const other = otherLang(lang);
 const alt = altPath ?? `/${other}/`;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site);
 ---
 <!doctype html>
 <html lang={lang} data-mode={defaultMode} data-default-mode={defaultMode}>
@@ -40,6 +42,24 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <link rel="alternate" hreflang={other} href={new URL(alt, Astro.site)} />
   <link rel="alternate" hreflang="x-default" href={new URL(`/en/${Astro.url.pathname.replace(/^\/(es|en)\//, '')}`, Astro.site)} />
   <link rel="sitemap" href="/sitemap.xml" />
+  <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
+  {rootRedirect && (
+    <script is:inline>
+      (function () {
+        var l = null;
+        try { l = localStorage.getItem('lang'); } catch (e) {}
+        if (!l) {
+          var p = navigator.languages || [navigator.language || ''];
+          for (var i = 0; i < p.length; i++) {
+            var x = (p[i] || '').toLowerCase();
+            if (x.indexOf('es') === 0) { l = 'es'; break; }
+            if (x.indexOf('en') === 0) { l = 'en'; break; }
+          }
+        }
+        if (l === 'es') location.replace('/es/' + location.hash);
+      })();
+    </script>
+  )}
   <meta name="author" content="Rosh Guadiana Páez" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <meta property="og:title" content={fullTitle} />
