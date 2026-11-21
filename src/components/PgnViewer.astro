@@ -20,7 +20,6 @@ const t = useT(lang).chess.viewer;
 
 <script>
   import { Chess } from 'chess.js';
-  const G: Record<string, string> = { wk: '♔', wq: '♕', wr: '♖', wb: '♗', wn: '♘', wp: '♙', bk: '♚', bq: '♛', br: '♜', bb: '♝', bn: '♞', bp: '♟' };
 
   document.querySelectorAll<HTMLElement>('.pgn').forEach((root) => {
     const full = new Chess();
@@ -51,7 +50,12 @@ const t = useT(lang).chess.viewer;
       g.board().forEach((row, r) => row.forEach((sq, f) => {
         const d = document.createElement('div');
         d.className = 'sq ' + ((r + f) % 2 === 0 ? 'light' : 'dark');
-        d.textContent = sq ? G[sq.color + sq.type] + '\uFE0E' : '';
+        if (sq) {
+          const img = document.createElement('img');
+          img.src = `/pieces/merida/${sq.color}${sq.type.toUpperCase()}.svg`;
+          img.alt = '';
+          d.appendChild(img);
+        }
         boardEl.appendChild(d);
       }));
       boardEl.setAttribute('aria-label', ply ? `After ${moves[ply - 1]}` : 'Starting position');
@@ -75,7 +79,8 @@ const t = useT(lang).chess.viewer;
 <style is:global>
   .pgn { display: flex; flex-wrap: wrap; gap: 24px; margin: 2em 0; }
   .pgn-board { flex: 0 1 420px; width: 100%; max-width: 420px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border: 2px solid #3d372e; }
-  .pgn-board .sq { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 4vw, 36px); line-height: 1; color: #1f1d1a; }
+  .pgn-board .sq { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
+  .pgn-board .sq img { width: 100%; height: 100%; }
   .pgn-board .light { background: #efe6d2; }
   .pgn-board .dark { background: #b9a27e; }
   .pgn-side { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }

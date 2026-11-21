@@ -45,10 +45,19 @@ try {
 const c = t.chess;
 const cards = [
   { site: 'Lichess', user: LICHESS_USER, href: `https://lichess.org/@/${LICHESS_USER}`,
-    stats: [[c.rapid, lichess.rapid], [c.bullet, lichess.bullet], [c.blitz, lichess.blitz], [c.puzzles, lichess.puzzle]] },
+    stats: [['rapid', c.rapid, lichess.rapid], ['blitz', c.blitz, lichess.blitz], ['bullet', c.bullet, lichess.bullet], ['puzzle', c.puzzles, lichess.puzzle]] },
   { site: 'Chess.com', user: CHESSCOM_USER, href: `https://www.chess.com/member/${CHESSCOM_USER}`,
-    stats: [[c.rapid, chesscom.rapid], [c.blitz, chesscom.blitz], [c.bullet, chesscom.bullet], [c.daily, chesscom.daily]] },
-];
+    stats: [['rapid', c.rapid, chesscom.rapid], ['blitz', c.blitz, chesscom.blitz], ['bullet', c.bullet, chesscom.bullet], ['daily', c.daily, chesscom.daily]] },
+] as const;
+
+// Time-control icons (stroke SVG paths)
+const icons: Record<string, string> = {
+  rapid: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/>',
+  blitz: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  bullet: '<path d="M3 9h10l6 3-6 3H3z"/><path d="M7 9v6"/>',
+  daily: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  puzzle: '<path d="M9 3h6v3a2 2 0 1 0 4 0V3h2v6h-3a2 2 0 1 0 0 4h3v8h-6v-3a2 2 0 1 0-4 0v3H3v-8h3a2 2 0 1 0 0-4H3V3z"/>',
+};
 
 // Repertoire. To change it, edit the FEN (copy it from Lichess's analysis board).
 const repertoire = [
@@ -83,8 +92,14 @@ const games = (await postsIn(lang)).filter((p) => p.data.shelf === 'chess');
           <a class="mono" href={card.href}>@{card.user}</a>
         </div>
         <dl>
-          {card.stats.map(([label, value]) => (
-            <div><dt class="mono">{label}</dt><dd>{value}</dd></div>
+          {card.stats.map(([key, label, value]) => (
+            <div class="stat">
+              <dt>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={icons[key]}></svg>
+                <span>{label}</span>
+              </dt>
+              <dd>{value}</dd>
+            </div>
           ))}
         </dl>
       </div>
@@ -132,9 +147,12 @@ const games = (await postsIn(lang)).filter((p) => p.data.shelf === 'chess');
   .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
   .card-head h2 { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 500; }
   .card-head a { font-size: 14px; color: var(--accent); }
-  dl { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-  dt { font-size: 12px; color: var(--muted); }
-  dd { margin: 4px 0 0; font-family: var(--font-display); font-size: 32px; font-weight: 500; }
+  dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; }
+  .stat { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 8px; background: var(--surface-2); }
+  dt { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-size: 26px; color: var(--fg-2); }
+  dt svg { width: 30px; height: 30px; flex: none; color: var(--accent); }
+  dd { margin: 0; font-family: var(--font-display); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (max-width: 480px) { dl { grid-template-columns: 1fr; } }
   .note { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--muted); }
   .rep { background: var(--surface-2); border-block: 1px solid var(--line); }
   .rep-inner { padding-block: 64px; display: flex; flex-direction: column; gap: 8px; }
