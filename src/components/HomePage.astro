@@ -60,12 +60,21 @@ const talkGroups = [
   </section>
 
   <!-- DISTINCTIONS -->
-  <section class="distinctions" aria-label={t.home.distinctions}>
-    <ul class="wrap">
-      {distinctions.map((d) => (
-        <li><a href={d.href}><span class="mono accent tag">{d.tag}</span><span>{d[lang]}</span></a></li>
-      ))}
-    </ul>
+  <section class="distinctions" aria-labelledby="dist-h">
+    <div class="wrap dist-inner">
+      <h2 id="dist-h" class="dist-title mono"><span class="accent">★</span> {lang === 'es' ? 'logros destacados' : 'highlights'}</h2>
+      <ul>
+        {distinctions.map((d) => (
+          <li>
+            <a href={d.href}>
+              <svg class="dist-ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg>
+              <span class="dist-text">{d[lang]}</span>
+              <span class="mono tag">{d.tag}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   </section>
 
   <!-- PROJECTS: one list, award-winning first, filterable by area -->
@@ -223,11 +232,17 @@ const talkGroups = [
   .fig-note { margin: 0; font-size: 12px; line-height: 1.6; color: var(--muted); max-width: 560px; }
   .fig-note a { color: var(--fg-2); text-decoration: underline; }
 
-  .distinctions { border-block: 1px solid var(--line); background: var(--surface-2); }
-  .distinctions ul { list-style: none; margin: 0 auto; padding-block: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 20px; }
-  .distinctions li a { display: flex; flex-direction: column; gap: 4px; font-size: 15px; padding: 4px 0; }
-  .distinctions li a:hover span:last-child { text-decoration: underline; }
-  .tag { font-size: 12px; }
+  .distinctions { border-block: 1px solid var(--line-strong); background: var(--surface-2); }
+  .dist-inner { padding-block: clamp(28px, 4vw, 44px); display: flex; flex-direction: column; gap: 20px; }
+  .dist-title { margin: 0; font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); }
+  .distinctions ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }
+  .distinctions li a { height: 100%; display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; border: 1px solid var(--line-strong); border-top: 3px solid var(--accent); border-radius: 10px; background: var(--surface); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+  .distinctions li a:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--accent); }
+  .dist-ico { width: 26px; height: 26px; color: var(--accent); }
+  .dist-text { font-family: var(--font-display); font-size: clamp(17px, 1.3vw, 21px); line-height: 1.3; font-weight: 700; color: var(--fg); }
+  :global(:root[data-mode='paper']) .dist-text { font-weight: 600; }
+  .tag { margin-top: auto; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .distinctions li a { transition: none; } .distinctions li a:hover { transform: none; } }
 
   .block { padding-block: 72px 8px; display: flex; flex-direction: column; gap: 28px; }
   .block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; }
