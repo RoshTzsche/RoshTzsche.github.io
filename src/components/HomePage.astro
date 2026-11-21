@@ -8,6 +8,7 @@ import { useT, otherLang, type Lang } from '../i18n/ui';
 import { postsIn, postUrl } from '../lib/posts';
 import { tex } from '../lib/tex';
 import { person } from '../data/person';
+import { talks, kinds } from '../data/talks';
 
 interface Props { lang: Lang; root?: boolean }
 const { lang, root = false } = Astro.props;
@@ -23,6 +24,11 @@ const profile = {
 };
 // Award-winning projects first, then the rest of the featured, then the lab
 const all = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.award), ...lab];
+const years = [...new Set(talks.filter((x) => x.year).map((x) => x.year as number))].sort((a, b) => b - a);
+const talkGroups = [
+  ...years.map((y) => ({ label: String(y), items: talks.filter((x) => x.year === y) })),
+  { label: t.home.talksMore, items: talks.filter((x) => x.year === null) },
+].filter((g) => g.items.length);
 ---
 <Base lang={lang} defaultMode="terminal" altPath={`/${otherLang(lang)}/`} canonicalPath={`/${lang}/`} rootRedirect={root} fullTitle={lang === 'es' ? 'Rosh Guadiana Páez — Ingeniería Biomédica · UDLAP' : 'Rosh Guadiana Páez — Biomedical Engineering · UDLAP'}>
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(profile)} />
@@ -43,7 +49,7 @@ const all = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.aw
           <a class="btn" href="/cv.pdf">cv.pdf</a>
           <a class="btn" href={`/${lang}/chess/`}><img class="btn-ico" src="/pieces/merida/wN.svg" alt="" width="20" height="20" />{t.home.chessBtn}</a>
         </div>
-        <p class="fig-note mono"><Fragment set:html={tex(t.home.figCaption)} /> <a href="https://github.com/RoshTzsche/eeg_phase_space">eeg_phase_space</a>.</p>
+        <p class="fig-note mono"><Fragment set:html={tex(t.home.figCaption)} /> <a href="https://github.com/RoshTzsche/eeg_phase_space">eeg_phase_space</a>. <a class="lab-link" href={`/${lang}/lab/`}>{t.home.labLink}</a></p>
       </div>
       <aside class="hero-eeg">
         <EEG lang={lang} />
@@ -122,6 +128,30 @@ const all = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.aw
     const fromHash = () => { if (location.hash === '#biomedical') setFilter('biomed'); };
     fromHash(); window.addEventListener('hashchange', fromHash);
   </script>
+
+  <!-- TALKS & OUTREACH: timeline grouped by year -->
+  <section id="talks" class="wrap block">
+    <div class="block-head col">
+      <h2 class="section-title"><span class="prefix">~/</span>{t.home.talksTitle}</h2>
+      <p class="muted sub">{t.home.talksSub}</p>
+    </div>
+    <ol class="timeline">
+      {talkGroups.map((g) => (
+        <li class="tl-year">
+          <span class="tl-label mono">{g.label}</span>
+          <ul class="tl-items">
+            {g.items.map((x) => (
+              <li class="tl-item">
+                <span class="tl-kind mono">{kinds[x.kind][lang]}</span>
+                <span class="tl-title">{x.href ? <a href={x.href}>{x.title[lang]} <span aria-hidden="true">↗</span></a> : x.title[lang]}</span>
+                <span class="tl-where">{x.where[lang]}</span>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  </section>
 
   <!-- RESEARCH + WRITING TEASER -->
   <section id="research" class="wrap block split">
@@ -228,4 +258,20 @@ const all = [...featured.filter((p) => p.award), ...featured.filter((p) => !p.aw
   .comps { margin: 0; padding: 0; list-style: none; }
   .comps li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
   .comps li:last-child { border-bottom: 1px solid var(--line); }
+  .lab-link { color: var(--accent) !important; text-decoration: none !important; white-space: nowrap; }
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .tl-year { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--line); }
+  .tl-year:last-child { border-bottom: 1px solid var(--line); }
+  .tl-label { font-size: 22px; font-weight: 700; color: var(--fg); }
+  :global(:root[data-mode='paper']) .tl-label { font-family: var(--font-display); font-weight: 500; font-size: 26px; }
+  .tl-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+  .tl-item { display: grid; grid-template-columns: 110px minmax(0, 1.4fr) minmax(0, 1fr); gap: 4px 20px; align-items: baseline; }
+  .tl-kind { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .tl-title { font-size: 17px; color: var(--fg); }
+  .tl-title a:hover { color: var(--accent); }
+  .tl-where { font-size: 15px; color: var(--muted); }
+  @media (max-width: 760px) {
+    .tl-year { grid-template-columns: 1fr; gap: 12px; }
+    .tl-item { grid-template-columns: 1fr; }
+  }
 </style>

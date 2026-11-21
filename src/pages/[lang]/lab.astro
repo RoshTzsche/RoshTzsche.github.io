@@ -1,0 +1,384 @@
+---
+// Interactive Takens lab — a browser version of lorentz.py + the AMI / FNN
+// diagnostics from eeg_phase_space (awakening/diagnostics.py).
+import Base from '../../layouts/Base.astro';
+import { getStaticLangPaths, otherLang, type Lang } from '../../i18n/ui';
+import { tex } from '../../lib/tex';
+
+export const getStaticPaths = getStaticLangPaths;
+const lang = Astro.params.lang as Lang;
+
+const T = {
+  es: {
+    title: 'Laboratorio de Takens',
+    kicker: 'LABORATORIO',
+    h1: 'Reconstruir un atractor desde una sola señal',
+    intro:
+      'Un sistema oculto evoluciona en tres dimensiones, pero solo podemos medir una coordenada, $s(t)=x(t)$, como un electrodo de EEG. El teorema de Takens dice que los vectores de retardo $\\big(s(t),\\,s(t-\\tau),\\,s(t-2\\tau)\\big)$ recuperan una copia equivalente de la geometría original. Mueve $\\tau$ y mira qué pasa.',
+    p1: '1. Sistema real oculto',
+    p2: '2. Señal observada $s(t)$',
+    p3: '3. Reconstrucción de Takens',
+    system: 'Sistema',
+    tau: 'Retardo $\\tau$ (muestras)',
+    autoTau: '$\\tau$ por AMI',
+    reset: 'Restablecer',
+    drag: 'Arrastra los paneles 3D para girarlos.',
+    amiTitle: 'Información mutua promedio',
+    amiNote: 'El primer mínimo sugiere un $\\tau$ donde las coordenadas ya no son redundantes.',
+    fnnTitle: 'Falsos vecinos cercanos',
+    fnnNote: 'La fracción de falsos vecinos cae cuando la dimensión $m$ ya basta para desplegar el atractor.',
+    status: (tau: string, ami: string, fnn: string) => `τ = ${tau} · primer mínimo de AMI en τ = ${ami} · FNN < 5 % desde m = ${fnn}`,
+    source: 'Basado en mi código de',
+    params: 'Parámetros',
+  },
+  en: {
+    title: 'Takens lab',
+    kicker: 'LAB',
+    h1: 'Rebuilding an attractor from a single signal',
+    intro:
+      "A hidden system evolves in three dimensions, but we can only measure one coordinate, $s(t)=x(t)$, like an EEG electrode. Takens' theorem says that the delay vectors $\\big(s(t),\\,s(t-\\tau),\\,s(t-2\\tau)\\big)$ recover an equivalent copy of the original geometry. Move $\\tau$ and watch.",
+    p1: '1. Hidden real system',
+    p2: '2. Observed signal $s(t)$',
+    p3: '3. Takens reconstruction',
+    system: 'System',
+    tau: 'Delay $\\tau$ (samples)',
+    autoTau: '$\\tau$ from AMI',
+    reset: 'Reset',
+    drag: 'Drag the 3D panels to rotate them.',
+    amiTitle: 'Average mutual information',
+    amiNote: 'The first minimum suggests a $\\tau$ where the coordinates stop being redundant.',
+    fnnTitle: 'False nearest neighbours',
+    fnnNote: 'The fraction of false neighbours drops once dimension $m$ is enough to unfold the attractor.',
+    status: (tau: string, ami: string, fnn: string) => `τ = ${tau} · first AMI minimum at τ = ${ami} · FNN < 5% from m = ${fnn}`,
+    source: 'Based on my code in',
+    params: 'Parameters',
+  },
+}[lang];
+---
+<Base lang={lang} title={T.title} defaultMode="terminal" current="lab" altPath={`/${otherLang(lang)}/lab/`}
+  description={lang === 'es' ? 'Laboratorio interactivo: reconstrucción de atractores por embedding de retardos (Takens), con información mutua y falsos vecinos cercanos.' : 'Interactive lab: attractor reconstruction by delay embedding (Takens), with mutual information and false nearest neighbours.'}>
+  <section class="wrap lab-head">
+    <p class="kicker">{T.kicker}</p>
+    <h1>{T.h1}</h1>
+    <p class="intro" set:html={tex(T.intro)} />
+    <p class="mono muted small">{T.source} <a href="https://github.com/RoshTzsche/eeg_phase_space">eeg_phase_space</a> (lorentz.py · diagnostics.py).</p>
+  </section>
+
+  <section class="wrap lab" data-lab
+    data-status-tpl={T.status('{t}', '{a}', '{f}')}>
+    <div class="panels">
+      <figure class="panel p3d">
+        <figcaption set:html={tex(T.p1)} />
+        <canvas data-plot="real" role="img" aria-label={T.p1.replace(/\$/g, '')}></canvas>
+      </figure>
+      <figure class="panel psig">
+        <figcaption set:html={tex(T.p2)} />
+        <canvas data-plot="signal" role="img" aria-label="s(t)"></canvas>
+      </figure>
+      <figure class="panel p3d">
+        <figcaption set:html={tex(T.p3)} />
+        <canvas data-plot="recon" role="img" aria-label={T.p3}></canvas>
+      </figure>
+    </div>
+
+    <div class="controls">
+      <label class="ctl">
+        <span>{T.system}</span>
+        <select data-system>
+          <option value="lorenz">Lorenz</option>
+          <option value="rossler">Rössler</option>
+        </select>
+      </label>
+      <label class="ctl grow">
+        <span set:html={tex(T.tau)} />
+        <input type="range" min="1" max="150" step="1" value="12" data-tau />
+        <output class="mono" data-tau-out>12</output>
+      </label>
+      <button type="button" class="btn" data-auto set:html={tex(T.autoTau)} />
+      <button type="button" class="btn" data-reset>{T.reset}</button>
+    </div>
+    <details class="params">
+      <summary class="mono">{T.params}: σ, ρ, β</summary>
+      <div class="param-row">
+        <label class="ctl"><span>σ</span><input type="range" min="1" max="20" step="0.5" value="10" data-p="sigma" /><output class="mono" data-p-out="sigma">10</output></label>
+        <label class="ctl"><span>ρ</span><input type="range" min="10" max="60" step="0.5" value="28" data-p="rho" /><output class="mono" data-p-out="rho">28</output></label>
+        <label class="ctl"><span>β</span><input type="range" min="0.5" max="5" step="0.05" value="2.67" data-p="beta" /><output class="mono" data-p-out="beta">2.67</output></label>
+      </div>
+    </details>
+    <p class="mono muted small" data-status aria-live="polite"></p>
+    <p class="muted small">{T.drag}</p>
+
+    <div class="diag">
+      <figure class="panel">
+        <figcaption>{T.amiTitle}</figcaption>
+        <canvas data-plot="ami" role="img" aria-label={T.amiTitle}></canvas>
+        <p class="note" set:html={tex(T.amiNote)} />
+      </figure>
+      <figure class="panel">
+        <figcaption>{T.fnnTitle}</figcaption>
+        <canvas data-plot="fnn" role="img" aria-label={T.fnnTitle}></canvas>
+        <p class="note" set:html={tex(T.fnnNote)} />
+      </figure>
+    </div>
+  </section>
+</Base>
+
+<script>
+  type V3 = [number, number, number];
+  const root = document.querySelector<HTMLElement>('[data-lab]')!;
+  const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+  const cv = (name: string) => $<HTMLCanvasElement>(`[data-plot="${name}"]`);
+
+  // ---------- simulation (RK4, like odeint over t = linspace(0, 50, 5000)) ----------
+  const N = 5000, DT = 0.01, TRANSIENT = 200;
+  const params = { sigma: 10, rho: 28, beta: 8 / 3 };
+  let system = 'lorenz';
+  const f = (s: V3): V3 => {
+    const [x, y, z] = s;
+    if (system === 'rossler') return [-y - z, x + 0.2 * y, 0.2 + z * (x - 5.7)];
+    return [params.sigma * (y - x), x * (params.rho - z) - y, x * y - params.beta * z];
+  };
+  function simulate(): V3[] {
+    let s: V3 = [1, 1, 1];
+    const out: V3[] = [];
+    const dt = system === 'rossler' ? 0.05 : DT;
+    for (let i = 0; i < N + TRANSIENT; i++) {
+      const k1 = f(s);
+      const k2 = f(s.map((v, j) => v + (dt / 2) * k1[j]) as V3);
+      const k3 = f(s.map((v, j) => v + (dt / 2) * k2[j]) as V3);
+      const k4 = f(s.map((v, j) => v + dt * k3[j]) as V3);
+      s = s.map((v, j) => v + (dt / 6) * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j])) as V3;
+      if (i >= TRANSIENT) out.push(s);
+    }
+    return out;
+  }
+
+  // ---------- diagnostics (ported from diagnostics.py) ----------
+  function ami(x: number[], maxLag: number, bins = 16): number[] {
+    const lo = Math.min(...x), hi = Math.max(...x), w = (hi - lo) / bins || 1;
+    const bin = (v: number) => Math.min(bins - 1, Math.floor((v - lo) / w));
+    const vals: number[] = [];
+    for (let tau = 1; tau <= maxLag; tau++) {
+      const n = x.length - tau, step = Math.max(1, Math.floor(n / 5000));
+      const joint = new Float64Array(bins * bins), pa = new Float64Array(bins), pb = new Float64Array(bins);
+      let total = 0;
+      for (let i = 0; i < n; i += step) {
+        const a = bin(x[i]), b = bin(x[i + tau]);
+        joint[a * bins + b]++; pa[a]++; pb[b]++; total++;
+      }
+      let mi = 0;
+      for (let a = 0; a < bins; a++) for (let b = 0; b < bins; b++) {
+        const p = joint[a * bins + b] / total;
+        if (p > 0) mi += p * Math.log2(p / ((pa[a] / total) * (pb[b] / total)));
+      }
+      vals.push(mi);
+    }
+    return vals;
+  }
+  const firstMin = (v: number[]) => {
+    for (let i = 1; i < v.length - 1; i++) if (v[i] < v[i - 1] && v[i] < v[i + 1]) return i + 1;
+    return v.indexOf(Math.min(...v)) + 1;
+  };
+  function fnn(x: number[], tau: number, maxDim = 6, theiler = 100, maxPts = 500): number[] {
+    let mean = 0; x.forEach((v) => (mean += v)); mean /= x.length;
+    let sd = 0; x.forEach((v) => (sd += (v - mean) ** 2)); sd = Math.sqrt(sd / x.length) || 1;
+    const res: number[] = [];
+    for (let m = 1; m <= maxDim; m++) {
+      const len = x.length - m * tau;
+      if (len < 50) { res.push(NaN); continue; }
+      const ids: number[] = [];
+      for (let k = 0; k < maxPts; k++) ids.push(Math.floor((k * (len - 1)) / (maxPts - 1)));
+      let tested = 0, falseN = 0;
+      for (const i of ids) {
+        let best = Infinity, bj = -1;
+        for (const j of ids) {
+          if (Math.abs(i - j) <= theiler) continue;
+          let d = 0;
+          for (let c = 0; c < m; c++) { const t = x[i + c * tau] - x[j + c * tau]; d += t * t; }
+          if (d < best) { best = d; bj = j; }
+        }
+        if (bj < 0 || best < 1e-24) continue;
+        const dist = Math.sqrt(best), extra = Math.abs(x[i + m * tau] - x[bj + m * tau]);
+        tested++;
+        if (extra / dist > 15 || Math.hypot(dist, extra) / sd > 2) falseN++;
+      }
+      res.push(tested ? falseN / tested : NaN);
+    }
+    return res;
+  }
+
+  // ---------- drawing ----------
+  const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const fit = (c: HTMLCanvasElement) => {
+    const dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
+    if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
+      c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+    }
+    const ctx = c.getContext('2d')!; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w: r.width, h: r.height };
+  };
+  const view = { yaw: 0.7, pitch: 0.35 };
+  function draw3d(c: HTMLCanvasElement, pts: V3[], color: string) {
+    const { ctx, w, h } = fit(c);
+    ctx.clearRect(0, 0, w, h);
+    const m = [0, 0, 0]; pts.forEach((p) => { m[0] += p[0]; m[1] += p[1]; m[2] += p[2]; });
+    m.forEach((_, k) => (m[k] /= pts.length));
+    let r = 0; pts.forEach((p) => { r = Math.max(r, Math.hypot(p[0] - m[0], p[1] - m[1], p[2] - m[2])); });
+    const k = (Math.min(w, h) * 0.46) / (r || 1);
+    const cy = Math.cos(view.yaw), sy = Math.sin(view.yaw), cp = Math.cos(view.pitch), sp = Math.sin(view.pitch);
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const x = p[0] - m[0], y = p[1] - m[1], z = p[2] - m[2];
+      const X = x * cy - y * sy, Y0 = x * sy + y * cy;
+      const Yp = z * cp - Y0 * sp;
+      const px = w / 2 + X * k, py = h / 2 - Yp * k;
+      if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+    });
+    ctx.strokeStyle = color; ctx.globalAlpha = 0.8; ctx.lineWidth = 0.7; ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  function drawLine(c: HTMLCanvasElement, ys: number[], opts: { color: string; mark?: number; marker?: number; ymin?: number; ymax?: number; xlabel?: string; points?: boolean }) {
+    const { ctx, w, h } = fit(c);
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 34, r: 10, t: 10, b: 24 };
+    const vals = ys.filter((v) => Number.isFinite(v));
+    const lo = opts.ymin ?? Math.min(...vals), hi = opts.ymax ?? Math.max(...vals);
+    const X = (i: number) => pad.l + (i / Math.max(1, ys.length - 1)) * (w - pad.l - pad.r);
+    const Y = (v: number) => h - pad.b - ((v - lo) / (hi - lo || 1)) * (h - pad.t - pad.b);
+    ctx.strokeStyle = css('--line'); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b); ctx.stroke();
+    ctx.fillStyle = css('--muted'); ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillText(hi.toFixed(2), 2, pad.t + 8); ctx.fillText(lo.toFixed(2), 2, h - pad.b);
+    if (opts.xlabel) ctx.fillText(opts.xlabel, w - pad.r - ctx.measureText(opts.xlabel).width, h - 6);
+    if (opts.mark !== undefined) {
+      ctx.strokeStyle = css('--muted'); ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(X(opts.mark), pad.t); ctx.lineTo(X(opts.mark), h - pad.b); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.strokeStyle = opts.color; ctx.lineWidth = 1.6; ctx.beginPath();
+    let started = false;
+    ys.forEach((v, i) => { if (!Number.isFinite(v)) return; if (started) ctx.lineTo(X(i), Y(v)); else { ctx.moveTo(X(i), Y(v)); started = true; } });
+    ctx.stroke();
+    if (opts.points) ys.forEach((v, i) => { if (Number.isFinite(v)) { ctx.fillStyle = opts.color; ctx.beginPath(); ctx.arc(X(i), Y(v), 3, 0, 7); ctx.fill(); } });
+    if (opts.marker !== undefined && Number.isFinite(ys[opts.marker])) {
+      ctx.fillStyle = opts.color; ctx.beginPath(); ctx.arc(X(opts.marker), Y(ys[opts.marker]), 5, 0, 7); ctx.fill();
+    }
+  }
+
+  // ---------- state & wiring ----------
+  const tauIn = $<HTMLInputElement>('[data-tau]'), tauOut = $<HTMLOutputElement>('[data-tau-out]');
+  const status = $<HTMLElement>('[data-status]'), tpl = root.dataset.statusTpl || '';
+  let real: V3[] = [], s: number[] = [], amiVals: number[] = [], amiTau = 12, fnnVals: number[] = [];
+  let fnnTimer = 0;
+
+  const recon = (tau: number): V3[] => {
+    const out: V3[] = [];
+    for (let i = 0; i + 2 * tau < s.length; i++) out.push([s[i], s[i + tau], s[i + 2 * tau]]);
+    return out;
+  };
+  const tau = () => Number(tauIn.value);
+  function updateStatus() {
+    const m = fnnVals.findIndex((v) => Number.isFinite(v) && v < 0.05);
+    status.textContent = tpl.replace('{t}', String(tau())).replace('{a}', String(amiTau)).replace('{f}', m >= 0 ? String(m + 1) : '—');
+  }
+  function render3d() {
+    const acc = css('--accent'), fg = css('--fg-2');
+    draw3d(cv('real'), real, fg);
+    draw3d(cv('recon'), recon(tau()), acc);
+  }
+  function renderAll() {
+    render3d();
+    drawLine(cv('signal'), s.slice(0, 1500), { color: css('--muted') });
+    drawLine(cv('ami'), amiVals, { color: css('--accent'), mark: tau() - 1, marker: amiTau - 1, ymin: 0, xlabel: 'τ' });
+    drawLine(cv('fnn'), fnnVals, { color: css('--accent'), ymin: 0, ymax: 1, xlabel: 'm', points: true });
+    updateStatus();
+  }
+  function scheduleFnn() {
+    clearTimeout(fnnTimer);
+    fnnTimer = window.setTimeout(() => { fnnVals = fnn(s, tau()); renderAll(); }, 120);
+  }
+  function recompute() {
+    real = simulate();
+    s = real.map((p) => p[0]);
+    amiVals = ami(s, 150);
+    amiTau = firstMin(amiVals);
+    fnnVals = fnn(s, tau());
+    renderAll();
+  }
+
+  tauIn.addEventListener('input', () => { tauOut.textContent = tauIn.value; render3d(); renderAll(); scheduleFnn(); });
+  $('[data-auto]').addEventListener('click', () => { tauIn.value = String(amiTau); tauOut.textContent = tauIn.value; scheduleFnn(); renderAll(); });
+  $('[data-reset]').addEventListener('click', () => {
+    tauIn.value = '12'; tauOut.textContent = '12';
+    Object.assign(params, { sigma: 10, rho: 28, beta: 8 / 3 });
+    root.querySelectorAll<HTMLInputElement>('[data-p]').forEach((el) => {
+      el.value = String((params as any)[el.dataset.p!]);
+      root.querySelector(`[data-p-out="${el.dataset.p}"]`)!.textContent = (params as any)[el.dataset.p!].toFixed(2).replace(/\.00$/, '');
+    });
+    recompute();
+  });
+  $<HTMLSelectElement>('[data-system]').addEventListener('change', (e) => {
+    system = (e.target as HTMLSelectElement).value;
+    root.querySelector<HTMLDetailsElement>('.params')!.hidden = system !== 'lorenz';
+    recompute();
+  });
+  let pTimer = 0;
+  root.querySelectorAll<HTMLInputElement>('[data-p]').forEach((el) =>
+    el.addEventListener('input', () => {
+      (params as any)[el.dataset.p!] = Number(el.value);
+      root.querySelector(`[data-p-out="${el.dataset.p}"]`)!.textContent = el.value;
+      clearTimeout(pTimer); pTimer = window.setTimeout(recompute, 80);
+    })
+  );
+
+  // drag to rotate both 3D panels together
+  root.querySelectorAll<HTMLCanvasElement>('.p3d canvas').forEach((c) => {
+    let drag: { x: number; y: number } | null = null;
+    c.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY }; c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      view.yaw += (e.clientX - drag.x) * 0.01;
+      view.pitch = Math.max(-1.4, Math.min(1.4, view.pitch + (e.clientY - drag.y) * 0.01));
+      drag = { x: e.clientX, y: e.clientY };
+      render3d();
+    });
+    c.addEventListener('pointerup', () => (drag = null));
+  });
+  // slow auto-rotation until the user drags (respects reduced motion)
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let touched = false;
+    root.querySelectorAll('.p3d canvas').forEach((c) => c.addEventListener('pointerdown', () => (touched = true)));
+    const spin = () => { if (!touched && !document.hidden) { view.yaw += 0.003; render3d(); } requestAnimationFrame(spin); };
+    requestAnimationFrame(spin);
+  }
+  window.addEventListener('modechange', renderAll);
+  new ResizeObserver(() => renderAll()).observe(root);
+  recompute();
+</script>
+
+<style>
+  .lab-head { padding-block: 64px 24px; display: flex; flex-direction: column; gap: 16px; max-width: 1000px; margin-inline: 0; }
+  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(32px, 4.6vw, 60px); line-height: 1.08; font-weight: 700; }
+  :global(:root[data-mode='paper']) h1 { font-weight: 500; }
+  .intro { margin: 0; font-size: clamp(17px, 0.45vw + 13px, 20px); line-height: 1.65; color: var(--fg-2); max-width: 70ch; }
+  .small { margin: 0; font-size: 13px; }
+  .small a { color: var(--accent); }
+  .lab { display: flex; flex-direction: column; gap: 18px; padding-bottom: 32px; }
+  .panels { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.7fr) minmax(0, 1.7fr); gap: 16px; }
+  @media (max-width: 960px) { .panels { grid-template-columns: 1fr; } }
+  .panel { margin: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+  .panel figcaption { font-family: var(--font-mono); font-size: 13px; color: var(--fg-2); }
+  .p3d canvas { width: 100%; aspect-ratio: 1 / 1; cursor: grab; touch-action: none; }
+  .p3d canvas:active { cursor: grabbing; }
+  .psig canvas { width: 100%; flex: 1; min-height: 220px; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 14px 18px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); }
+  .ctl { display: inline-flex; align-items: center; gap: 12px; font-size: 14px; color: var(--fg-2); }
+  .ctl.grow { flex: 1 1 320px; }
+  .ctl input[type='range'] { flex: 1; accent-color: var(--accent); min-height: 44px; }
+  .ctl output { min-width: 3ch; text-align: right; color: var(--fg); }
+  select { min-height: 40px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--fg); font: inherit; }
+  .params summary { cursor: pointer; font-size: 13px; color: var(--muted); padding: 6px 0; }
+  .param-row { display: flex; flex-wrap: wrap; gap: 8px 28px; padding: 8px 0; }
+  .param-row .ctl { flex: 1 1 220px; }
+  .diag { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; margin-top: 8px; }
+  .diag canvas { width: 100%; height: 220px; }
+  .note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+</style>
