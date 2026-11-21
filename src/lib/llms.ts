@@ -54,7 +54,9 @@ ${person.description}
 
 - Name: Rosh Guadiana Páez (also: ${person.alternateName.join(', ')})
 - Role: ${person.jobTitle}
-- University: Universidad de las Américas Puebla (UDLAP), Honors Program, expected graduation 2028, GPA 9.6/10, full scholarship
+- University: Universidad de las Américas Puebla (UDLAP), Biomedical Engineering, expected graduation 2028, GPA 9.6/10, 100% scholarship
+- Member of the UDLAP Honors Program and the UDLAP STEM Representative Team (institutional technology projects and science communication; host and editor of the STEMpire podcast)
+- Teaching and outreach: quantum computing classes at Verano STEM UDLAP, peer math lecture series, Noche de las Estrellas workshops
 - From: Durango, Mexico · studying in Puebla, Mexico
 - Research interests: computational neuroscience, nonlinear dynamics, mathematical approaches to neural signals
 - Languages: Spanish (native), English (advanced), French (basic)
