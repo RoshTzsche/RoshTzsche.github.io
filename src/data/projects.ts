@@ -171,3 +171,13 @@ export const competitions = [
   { title: { es: 'Olimpiada de Física 2023', en: 'Physics Olympiad 2023' }, es: 'Delegación de Durango, etapa nacional', en: 'Durango state delegation, national round' },
   { title: { es: 'XXXI Olimpiada de Química', en: 'XXXI Chemistry Olympiad' }, es: 'Medalla de bronce nacional', en: 'National bronze medal' },
 ];
+
+// Small side projects: one muted line under the main list, low prominence.
+export const sideProjects = [
+  {
+    repo: 'zen_haptics',
+    name: 'HapticBall',
+    es: 'sandbox de física para Android: lanzas pelotas, dibujas obstáculos y la vibración responde a cada choque (Verlet + API háptica, Jetpack Compose).',
+    en: 'an Android physics sandbox: spawn balls, draw obstacles and feel every bounce (Verlet integration + haptics API, Jetpack Compose).',
+  },
+];

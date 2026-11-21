@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Attractor from '../components/Attractor.astro';
 import EEG from '../components/EEG.astro';
 import ProjectRow from '../components/ProjectRow.astro';
-import { featured, lab, distinctions, competitions } from '../data/projects';
+import { featured, lab, distinctions, competitions, sideProjects } from '../data/projects';
 import { useT, otherLang, type Lang } from '../i18n/ui';
 import { postsIn, postUrl } from '../lib/posts';
 import { tex } from '../lib/tex';
@@ -84,6 +84,11 @@ const talkGroups = [
     <div class="rows" data-rows>
       {all.map((p, i) => <ProjectRow p={p} lang={lang} n={i + 1} />)}
     </div>
+    <ul class="side-projects">
+      {sideProjects.map((sp) => (
+        <li><span class="mono side-lbl">{t.home.sideLabel}</span> <a href={`https://github.com/RoshTzsche/${sp.repo}`}>{sp.name} ↗</a> — {sp[lang]}</li>
+      ))}
+    </ul>
   </section>
 
   <!-- MATH: lectures first, then what I'm studying; quiet styling -->
@@ -239,6 +244,9 @@ const talkGroups = [
   .btn-ico { width: 20px; height: 20px; }
   .anchor { position: relative; top: -96px; }
   .rows { display: flex; flex-direction: column; }
+  .side-projects { list-style: none; margin: 0; padding: 0; font-size: 14px; color: var(--muted); }
+  .side-projects a { color: var(--fg-2); text-decoration: underline; text-underline-offset: 3px; }
+  .side-lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; margin-right: 6px; }
   .filters { display: flex; flex-wrap: wrap; gap: 8px; }
   .filters button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1px solid var(--line-strong); border-radius: 999px; background: transparent; color: var(--fg-2); font: inherit; font-size: 14px; cursor: pointer; }
   .filters button:hover { border-color: var(--fg-2); }
