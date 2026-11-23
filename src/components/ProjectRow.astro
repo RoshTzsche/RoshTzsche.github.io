@@ -9,9 +9,11 @@ const { p, lang, n, compact = false } = Astro.props;
 const image = ['webp', 'jpg', 'jpeg', 'png', 'gif']
   .map((ext) => `/projects/${p.repo}.${ext}`)
   .find((src) => fs.existsSync(`public${src}`));
+// Optional demo clip: public/projects/<repo>.mp4 (the image above becomes its poster).
+const video = fs.existsSync(`public/projects/${p.repo}.mp4`) ? `/projects/${p.repo}.mp4` : undefined;
 const tags = p.stack.split('·').map((s) => s.trim());
 ---
-<article id={`p-${p.repo}`} class:list={['row', { compact, 'has-image': !!image }]} data-areas={p.areas.join(' ')}>
+<article id={`p-${p.repo}`} class:list={['row', { compact, 'has-image': !!(image || video) }]} data-areas={p.areas.join(' ')}>
   <span class="idx mono" aria-hidden="true">{String(n).padStart(2, '0')}</span>
 
   <div class="head">
@@ -38,7 +40,12 @@ const tags = p.stack.split('·').map((s) => s.trim());
     )}
   </div>
 
-  {image && (
+  {video ? (
+    <a class="thumb" href={repoUrl(p.repo)} tabindex="-1" aria-hidden="true">
+      <video src={video} poster={image} muted loop playsinline preload="none" data-autoplay></video>
+      <span class="live mono">demo</span>
+    </a>
+  ) : image && (
     <a class="thumb" href={repoUrl(p.repo)} tabindex="-1" aria-hidden="true">
       <img src={image} alt="" loading="lazy" decoding="async" />
     </a>
@@ -83,7 +90,9 @@ const tags = p.stack.split('·').map((s) => s.trim());
   .foot a { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
 
   .thumb { position: relative; z-index: 1; display: block; align-self: start; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 8px; filter: grayscale(1); transition: filter 0.3s ease; }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .live { position: absolute; left: 10px; bottom: 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,0.55); padding: 2px 8px; border-radius: 999px; }
+  .live::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: currentColor; vertical-align: 1px; }
 
   .row:hover .idx, .row:hover h3 a { color: var(--accent); }
   .row:hover .arrow { color: var(--accent); transform: translate(3px, -3px); }
@@ -100,3 +109,18 @@ const tags = p.stack.split('·').map((s) => s.trim());
   }
   @media (prefers-reduced-motion: reduce) { .arrow, .thumb { transition: none; } }
 </style>
+
+<script>
+  // Play demo clips only while visible, and never for reduced-motion users.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clips = document.querySelectorAll<HTMLVideoElement>('video[data-autoplay]');
+  if (!reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        const v = e.target as HTMLVideoElement;
+        if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
+      }
+    }, { threshold: 0.35 });
+    clips.forEach((v) => io.observe(v));
+  }
+</script>
